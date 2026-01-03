@@ -4,12 +4,15 @@
  */
 
 import { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Calendar } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Menu, X, Calendar, User, LogOut } from 'lucide-react';
+import { useAuth, getDashboardRoute } from '@/hooks/useAuth';
 
 const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { isAuthenticated, user, role, signOut } = useAuth();
 
   const navLinks = [
     { href: '/', label: 'Home' },
@@ -17,6 +20,11 @@ const Header = () => {
     { href: '/#properties', label: 'Properties' },
     { href: '/#contact', label: 'Contact' },
   ];
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
+  };
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -62,12 +70,32 @@ const Header = () => {
             ))}
           </nav>
 
-          {/* Schedule Meeting Button */}
-          <div className="hidden lg:block">
-            <Link
-              to="/schedule"
-              className="btn-outline"
-            >
+          {/* Auth & Schedule Meeting Buttons */}
+          <div className="hidden lg:flex items-center gap-4">
+            {isAuthenticated ? (
+              <>
+                <Link
+                  to={getDashboardRoute(role)}
+                  className="flex items-center gap-2 text-foreground font-semibold hover:text-secondary transition-colors"
+                >
+                  <User className="w-4 h-4" />
+                  Dashboard
+                </Link>
+                <button
+                  onClick={handleSignOut}
+                  className="flex items-center gap-2 text-muted-foreground hover:text-destructive transition-colors"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Sign Out
+                </button>
+              </>
+            ) : (
+              <Link to="/auth" className="btn-outline py-2 px-5">
+                <User className="w-4 h-4" />
+                Sign In
+              </Link>
+            )}
+            <Link to="/schedule" className="btn-primary py-2 px-5">
               <Calendar className="w-4 h-4" />
               Schedule Meeting
             </Link>
@@ -97,9 +125,40 @@ const Header = () => {
                   {link.label}
                 </Link>
               ))}
+              {isAuthenticated ? (
+                <>
+                  <Link
+                    to={getDashboardRoute(role)}
+                    className="flex items-center gap-2 text-foreground font-semibold py-2"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <User className="w-4 h-4" />
+                    Dashboard
+                  </Link>
+                  <button
+                    onClick={() => {
+                      handleSignOut();
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="flex items-center gap-2 text-destructive font-semibold py-2 w-full text-left"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Sign Out
+                  </button>
+                </>
+              ) : (
+                <Link
+                  to="/auth"
+                  className="btn-outline w-full justify-center mt-2"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <User className="w-4 h-4" />
+                  Sign In
+                </Link>
+              )}
               <Link
                 to="/schedule"
-                className="btn-outline w-full justify-center mt-2"
+                className="btn-primary w-full justify-center mt-2"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 <Calendar className="w-4 h-4" />
