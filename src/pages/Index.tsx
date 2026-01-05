@@ -16,6 +16,7 @@ import InvestmentToolsSection from '@/components/InvestmentToolsSection';
 import CommunitySection from '@/components/CommunitySection';
 import PartnersSection from '@/components/PartnersSection';
 import ContactSection from '@/components/ContactSection';
+import ChatbotWidget from '@/components/ChatbotWidget';
 
 const Index = () => {
   return (
@@ -35,6 +36,7 @@ const Index = () => {
         <ContactSection />
       </main>
       <Footer />
+      <ChatbotWidget />
     </div>
   );
 };
