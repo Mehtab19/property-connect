@@ -3,12 +3,12 @@
  * Main hero banner for the homepage
  */
 
-import { Building, Bot } from 'lucide-react';
+import { Bot, Building2, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const HeroSection = () => {
   const stats = [
-    { value: '$2.5B+', label: 'Property Value' },
+    { value: '$2.5B+', label: 'Property Value Analyzed' },
     { value: '200+', label: 'Verified Partners' },
     { value: '4,200+', label: 'Successful Connections' },
     { value: '98%', label: 'Client Satisfaction' },
@@ -19,7 +19,7 @@ const HeroSection = () => {
       id="home" 
       className="relative min-h-[90vh] flex items-center justify-center text-white overflow-hidden"
       style={{
-        background: `linear-gradient(135deg, rgba(26, 54, 93, 0.92) 0%, rgba(15, 118, 110, 0.88) 100%), 
+        background: `linear-gradient(135deg, rgba(26, 54, 93, 0.95) 0%, rgba(15, 118, 110, 0.9) 100%), 
                      url('https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=1973&q=80')`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
@@ -35,25 +35,29 @@ const HeroSection = () => {
       />
 
       <div className="container mx-auto px-4 text-center relative z-10">
-        <h2 className="text-4xl md:text-5xl lg:text-6xl font-extrabold mb-6 leading-tight animate-slide-up">
-          Connecting You to Premium Properties
-        </h2>
+        {/* Product Badge */}
+        <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full mb-6 animate-slide-up">
+          <Sparkles className="w-4 h-4 text-accent" />
+          <span className="text-sm font-medium">AI-Powered Real Estate Intelligence</span>
+        </div>
+
+        <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold mb-6 leading-tight animate-slide-up">
+          PropertyX — AI-Powered Property<br className="hidden md:block" /> Buying & Investment Analyst
+        </h1>
         <p className="text-lg md:text-xl max-w-3xl mx-auto mb-10 opacity-90 animate-slide-up" style={{ animationDelay: '0.1s' }}>
-          PrimeX Estates carefully selects property partners through rigorous due diligence, 
-          connecting you directly with project developers and builders for your dream property. 
-          Powered by PropertyX Intelligence AI engine.
+          Chat or speak with PropertyX to get ROI, risk, and affordability insights—then connect to a verified human agent.
         </p>
 
         {/* CTA Buttons */}
         <div className="flex flex-wrap gap-4 justify-center mb-16 animate-slide-up" style={{ animationDelay: '0.2s' }}>
-          <a href="#properties" className="btn-secondary">
-            <Building className="w-5 h-5" />
-            Explore Properties
-          </a>
-          <a href="#ai-advisory" className="btn-accent">
+          <Link to="/onboarding" className="btn-secondary text-lg px-8 py-4">
             <Bot className="w-5 h-5" />
-            Try AI Advisor
-          </a>
+            Start with PropertyX
+          </Link>
+          <Link to="/properties" className="btn-accent text-lg px-8 py-4">
+            <Building2 className="w-5 h-5" />
+            Browse Properties
+          </Link>
         </div>
 
         {/* Stats */}
