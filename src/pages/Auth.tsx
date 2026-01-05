@@ -7,7 +7,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth, AppRole, getDashboardRoute } from '@/hooks/useAuth';
 import { toast } from 'sonner';
-import { Eye, EyeOff, User, Building2, TrendingUp, Shield, Mail, Lock, UserCircle } from 'lucide-react';
+import { Eye, EyeOff, User, Building2, TrendingUp, Shield, Mail, Lock, UserCircle, Briefcase, Landmark } from 'lucide-react';
 import { z } from 'zod';
 
 // Validation schemas
@@ -16,10 +16,11 @@ const passwordSchema = z.string().min(6, 'Password must be at least 6 characters
 const nameSchema = z.string().min(2, 'Name must be at least 2 characters');
 
 const roleOptions: { value: AppRole; label: string; description: string; icon: React.ElementType }[] = [
-  { value: 'buyer', label: 'Individual Buyer', description: 'Looking to buy or rent property', icon: User },
-  { value: 'investor', label: 'Investor', description: 'Investment opportunities & ROI tracking', icon: TrendingUp },
-  { value: 'developer', label: 'Developer', description: 'List and manage your properties', icon: Building2 },
-  { value: 'admin', label: 'Admin', description: 'Platform management & oversight', icon: Shield },
+  { value: 'buyer', label: 'Buyer', description: 'Looking to buy or rent', icon: User },
+  { value: 'investor', label: 'Investor', description: 'Investment & ROI tracking', icon: TrendingUp },
+  { value: 'developer', label: 'Developer', description: 'List your properties', icon: Building2 },
+  { value: 'broker', label: 'Broker/Agent', description: 'Connect with clients', icon: Briefcase },
+  { value: 'mortgage_partner', label: 'Mortgage Partner', description: 'Offer financing', icon: Landmark },
 ];
 
 const Auth = () => {

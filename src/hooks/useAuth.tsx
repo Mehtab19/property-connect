@@ -9,7 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
-export type AppRole = 'admin' | 'buyer' | 'investor' | 'developer';
+export type AppRole = 'admin' | 'buyer' | 'investor' | 'developer' | 'broker' | 'mortgage_partner';
 
 interface AuthContextType {
   user: User | null;
@@ -183,6 +183,10 @@ export const getDashboardRoute = (role: AppRole | null): string => {
       return '/investor/dashboard';
     case 'developer':
       return '/developer/dashboard';
+    case 'broker':
+      return '/broker/dashboard';
+    case 'mortgage_partner':
+      return '/mortgage-partner/dashboard';
     default:
       return '/';
   }

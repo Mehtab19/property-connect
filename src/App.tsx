@@ -12,6 +12,8 @@ import PropertyDetails from "./pages/PropertyDetails";
 import ScheduleMeeting from "./pages/ScheduleMeeting";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
+import CompareProperties from "./pages/CompareProperties";
+import MortgageHub from "./pages/MortgageHub";
 
 // Dashboards
 import BuyerDashboard from "./pages/dashboards/BuyerDashboard";
@@ -41,6 +43,8 @@ const App = () => (
             <Route path="/property/:id" element={<PropertyDetails />} />
             <Route path="/schedule" element={<ScheduleMeeting />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/compare" element={<CompareProperties />} />
+            <Route path="/mortgage" element={<MortgageHub />} />
 
             {/* Buyer Dashboard Routes */}
             <Route
