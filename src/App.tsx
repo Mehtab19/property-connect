@@ -17,6 +17,7 @@ import MortgageHub from "./pages/MortgageHub";
 import Onboarding from "./pages/Onboarding";
 import Properties from "./pages/Properties";
 import Chat from "./pages/Chat";
+import Handoff from "./pages/Handoff";
 
 // Dashboards
 import BuyerDashboard from "./pages/dashboards/BuyerDashboard";
@@ -54,6 +55,7 @@ const App = () => (
             <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/properties" element={<Properties />} />
             <Route path="/chat" element={<Chat />} />
+            <Route path="/handoff" element={<Handoff />} />
 
             {/* Buyer Dashboard Routes */}
             <Route

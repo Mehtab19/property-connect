@@ -31,6 +31,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { useHandoff, HandoffContext } from '@/hooks/useHandoff';
 import HandoffForm from '@/components/HandoffForm';
+import HandoffCTA from '@/components/chat/HandoffCTA';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { supabase } from '@/integrations/supabase/client';
@@ -42,6 +43,7 @@ interface Message {
   timestamp: Date;
   confidenceScore?: number;
   metadata?: Record<string, any>;
+  handoffTrigger?: string;
 }
 
 interface PropertyContext {
@@ -440,14 +442,15 @@ What would you like to explore today?`,
             }
           }
           
-          // If trigger was detected, show handoff suggestion
+          // If trigger was detected, add handoff CTA message
           if (trigger) {
             setTimeout(() => {
               setMessages((prev) => [...prev, {
-                id: `handoff-suggest-${Date.now()}`,
-                content: `I'd be happy to connect you with a human expert who can assist further with your ${trigger === 'siteVisit' ? 'property visit' : trigger === 'negotiation' ? 'negotiation needs' : trigger === 'legal' ? 'legal requirements' : trigger === 'financing' ? 'financing options' : 'request'}. Would you like me to arrange that?`,
+                id: `handoff-cta-${Date.now()}`,
+                content: '',
                 role: 'assistant',
                 timestamp: new Date(),
+                handoffTrigger: trigger,
               }]);
             }, 500);
           }
@@ -631,40 +634,41 @@ What would you like to explore today?`,
                       key={message.id}
                       className={cn(
                         'max-w-[85%] animate-in fade-in slide-in-from-bottom-2 duration-300',
-                        message.role === 'user' ? 'ml-auto' : 'mr-auto'
+                        message.role === 'user' ? 'ml-auto' : 'mr-auto',
+                        message.handoffTrigger && 'max-w-full'
                       )}
                     >
-                      <div
-                        className={cn(
-                          'p-4 rounded-2xl',
-                          message.role === 'user'
-                            ? 'bg-primary text-primary-foreground rounded-br-md'
-                            : 'bg-muted text-foreground rounded-bl-md'
-                        )}
-                      >
-                        <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
-                      </div>
-                      {message.role === 'assistant' && message.content && (
-                        <div className="flex items-center gap-2 mt-2">
-                          <button
-                            onClick={() => speakMessage(message.content)}
-                            className="p-1.5 rounded-full bg-muted hover:bg-muted/80 text-muted-foreground transition-all hover:scale-110"
-                            title={isSpeaking ? 'Stop speaking' : 'Listen to message'}
+                      {/* Handoff CTA Card */}
+                      {message.handoffTrigger ? (
+                        <HandoffCTA
+                          trigger={message.handoffTrigger}
+                          conversationId={conversationId}
+                          propertyId={propertyContext?.id}
+                        />
+                      ) : (
+                        <>
+                          <div
+                            className={cn(
+                              'p-4 rounded-2xl',
+                              message.role === 'user'
+                                ? 'bg-primary text-primary-foreground rounded-br-md'
+                                : 'bg-muted text-foreground rounded-bl-md'
+                            )}
                           >
-                            {isSpeaking ? <VolumeX className="w-3 h-3" /> : <Volume2 className="w-3 h-3" />}
-                          </button>
-                          {message.id.startsWith('handoff-suggest') && (
-                            <Button
-                              size="sm"
-                              variant="secondary"
-                              className="h-7 text-xs"
-                              onClick={() => setShowHandoffForm(true)}
-                            >
-                              <UserCheck className="w-3 h-3 mr-1" />
-                              Yes, connect me
-                            </Button>
+                            <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
+                          </div>
+                          {message.role === 'assistant' && message.content && (
+                            <div className="flex items-center gap-2 mt-2">
+                              <button
+                                onClick={() => speakMessage(message.content)}
+                                className="p-1.5 rounded-full bg-muted hover:bg-muted/80 text-muted-foreground transition-all hover:scale-110"
+                                title={isSpeaking ? 'Stop speaking' : 'Listen to message'}
+                              >
+                                {isSpeaking ? <VolumeX className="w-3 h-3" /> : <Volume2 className="w-3 h-3" />}
+                              </button>
+                            </div>
                           )}
-                        </div>
+                        </>
                       )}
                     </div>
                   ))}
