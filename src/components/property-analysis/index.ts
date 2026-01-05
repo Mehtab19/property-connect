@@ -5,4 +5,7 @@ export { default as AreaTrends } from './AreaTrends';
 export { default as AIExplainability } from './AIExplainability';
 export { default as RequestHumanReview } from './RequestHumanReview';
 export { default as DecisionBrief } from './DecisionBrief';
+export { default as AnalysisModal } from './AnalysisModal';
+export { default as AnalysisResults } from './AnalysisResults';
 export type { DecisionBriefData, UserGoal, RiskLevel, Verdict } from './DecisionBrief';
+export type { AnalysisFormData } from './AnalysisModal';
