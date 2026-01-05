@@ -15,6 +15,7 @@ import NotFound from "./pages/NotFound";
 import CompareProperties from "./pages/CompareProperties";
 import MortgageHub from "./pages/MortgageHub";
 import Onboarding from "./pages/Onboarding";
+import Properties from "./pages/Properties";
 
 // Dashboards
 import BuyerDashboard from "./pages/dashboards/BuyerDashboard";
@@ -50,6 +51,7 @@ const App = () => (
             <Route path="/compare" element={<CompareProperties />} />
             <Route path="/mortgage" element={<MortgageHub />} />
             <Route path="/onboarding" element={<Onboarding />} />
+            <Route path="/properties" element={<Properties />} />
 
             {/* Buyer Dashboard Routes */}
             <Route
