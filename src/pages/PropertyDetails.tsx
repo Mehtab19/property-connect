@@ -18,11 +18,21 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import ComparableProperties from '@/components/property-analysis/ComparableProperties';
+import AnalysisModal, { AnalysisFormData } from '@/components/property-analysis/AnalysisModal';
+import AnalysisResults from '@/components/property-analysis/AnalysisResults';
+import { DecisionBriefData, UserGoal, RiskLevel, Verdict } from '@/components/property-analysis/DecisionBrief';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 const PropertyDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { user, isAuthenticated } = useAuth();
   const [activeImage, setActiveImage] = useState(0);
+  const [showAnalysisModal, setShowAnalysisModal] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisResult, setAnalysisResult] = useState<DecisionBriefData | null>(null);
 
   // Get property data
   const property = id ? getPropertyById(id) : undefined;
@@ -94,6 +104,121 @@ const PropertyDetails = () => {
     setActiveImage(prev => (prev === property.gallery.length - 1 ? 0 : prev + 1));
   };
 
+  const handleRunAnalysis = () => {
+    setShowAnalysisModal(true);
+  };
+
+  const handleAnalysisSubmit = async (formData: AnalysisFormData) => {
+    setIsAnalyzing(true);
+    
+    try {
+      // Call the edge function
+      const { data, error } = await supabase.functions.invoke('property-analysis', {
+        body: {
+          property: {
+            id: property.id,
+            name: property.name,
+            price: property.price,
+            location: property.location,
+            city: property.city,
+            country: property.country,
+            type: property.type,
+            status: property.status,
+            bedrooms: property.bedrooms,
+            bathrooms: property.bathrooms,
+            area: property.area,
+            developer: property.developer,
+            aiScore: property.aiScore,
+            expectedRoi: property.expectedRoi,
+            features: property.features,
+            amenities: property.amenities,
+          },
+          userContext: formData,
+        },
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      // Transform API response to DecisionBriefData
+      const userGoal: UserGoal = formData.role === 'buyer' ? 'buy_to_live' : 'buy_to_invest';
+      
+      const decisionBrief: DecisionBriefData = {
+        userGoal,
+        propertyContext: {
+          name: property.name,
+          location: `${property.location}, ${property.city}`,
+          type: property.type,
+          price: property.price,
+        },
+        snapshot: {
+          investmentScore: data.investmentScore || 7,
+          riskLevel: (data.riskLevel || 'Medium') as RiskLevel,
+          confidence: data.confidence || 0.75,
+        },
+        financialView: {
+          estimatedRent: data.estimatedRent,
+          rentalYield: data.rentalYield ? `${data.rentalYield}%` : undefined,
+          appreciationOutlook: data.appreciationOutlook || '+5-10% 5Y',
+          totalCostNotes: data.totalCostNotes || 'Include registration fees, maintenance deposits, and closing costs',
+        },
+        riskFlags: data.riskFlags || [],
+        comparableCheck: {
+          range: data.comparableRange || property.price,
+          implication: data.comparableImplication || 'Within market range for similar properties',
+        },
+        recommendation: {
+          verdict: (data.verdict || 'Consider') as Verdict,
+          nextSteps: data.nextSteps || ['Schedule a viewing', 'Verify documentation', 'Consult a financial advisor'],
+        },
+        assumptions: data.assumptions || ['Market conditions remain stable', 'No major policy changes'],
+        missingInfo: data.missingInfo,
+      };
+
+      setAnalysisResult(decisionBrief);
+      setShowAnalysisModal(false);
+
+      // Save to database if authenticated
+      if (isAuthenticated && user) {
+        try {
+          await supabase.from('property_analyses').insert({
+            property_id: property.id,
+            user_id: user.id,
+            roi_estimate: data.investmentScore ? data.investmentScore * 10 : 70,
+            risk_score: data.riskLevel === 'Low' ? 30 : data.riskLevel === 'High' ? 80 : 50,
+            confidence_score: Math.round((data.confidence || 0.75) * 100),
+            rental_yield: data.rentalYield || 3.5,
+            appreciation_forecast: data.appreciationForecast || 8,
+            risk_flags: data.riskFlags || [],
+            recommended_actions: data.nextSteps || [],
+            ai_summary: data.aiSummary || `Analysis for ${property.name}`,
+            market_trends: {
+              comparableRange: data.comparableRange,
+              comparableImplication: data.comparableImplication,
+              verdict: data.verdict,
+            },
+          });
+        } catch (dbError) {
+          console.error('Failed to save analysis:', dbError);
+          // Don't block the UI if save fails
+        }
+      }
+
+      toast.success('Analysis complete!');
+
+    } catch (err) {
+      console.error('Analysis error:', err);
+      toast.error('Failed to generate analysis. Please try again.');
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
+  const handleCloseAnalysis = () => {
+    setAnalysisResult(null);
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
@@ -128,6 +253,17 @@ const PropertyDetails = () => {
 
       <main className="flex-1 py-12">
         <div className="container mx-auto px-4">
+          {/* Analysis Results (if available) */}
+          {analysisResult && (
+            <div className="mb-8">
+              <AnalysisResults
+                data={analysisResult}
+                propertyId={property.id}
+                onClose={handleCloseAnalysis}
+              />
+            </div>
+          )}
+
           <div className="grid lg:grid-cols-3 gap-8">
             {/* Main Content - Left Column */}
             <div className="lg:col-span-2 space-y-8">
@@ -447,7 +583,7 @@ const PropertyDetails = () => {
                       <div className="text-xs text-muted-foreground">Expected ROI</div>
                     </div>
                   </div>
-                  <Button className="w-full" size="lg">
+                  <Button className="w-full" size="lg" onClick={handleRunAnalysis}>
                     <Bot className="w-4 h-4 mr-2" />
                     Run Full Analysis
                   </Button>
@@ -577,6 +713,14 @@ const PropertyDetails = () => {
       </main>
 
       <Footer />
+
+      {/* Analysis Modal */}
+      <AnalysisModal
+        open={showAnalysisModal}
+        onOpenChange={setShowAnalysisModal}
+        onSubmit={handleAnalysisSubmit}
+        isLoading={isAnalyzing}
+      />
     </div>
   );
 };
