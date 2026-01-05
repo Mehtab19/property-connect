@@ -1,12 +1,59 @@
 /**
  * Header Component
- * Main navigation header for PrimeX Estates
+ * Main navigation header with role-based navigation
  */
 
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, X, Calendar, User, LogOut } from 'lucide-react';
-import { useAuth, getDashboardRoute } from '@/hooks/useAuth';
+import { 
+  Menu, X, Calendar, User, LogOut, Scale, Building2, 
+  Heart, Briefcase, TrendingUp, Landmark 
+} from 'lucide-react';
+import { useAuth, getDashboardRoute, AppRole } from '@/hooks/useAuth';
+
+// Role-specific quick actions shown in header
+const getRoleQuickLinks = (role: AppRole | null) => {
+  const commonLinks = [
+    { href: '/compare', label: 'Compare', icon: Scale },
+  ];
+
+  switch (role) {
+    case 'buyer':
+      return [
+        ...commonLinks,
+        { href: '/mortgage', label: 'Mortgage', icon: Landmark },
+        { href: '/buyer/dashboard/saved', label: 'Favorites', icon: Heart },
+      ];
+    case 'investor':
+      return [
+        ...commonLinks,
+        { href: '/mortgage', label: 'Financing', icon: Landmark },
+        { href: '/investor/dashboard/portfolio', label: 'Portfolio', icon: TrendingUp },
+      ];
+    case 'developer':
+      return [
+        { href: '/developer/dashboard/listings', label: 'My Listings', icon: Building2 },
+        { href: '/developer/dashboard/leads', label: 'Leads', icon: Briefcase },
+      ];
+    case 'broker':
+      return [
+        { href: '/broker/dashboard/listings', label: 'Listings', icon: Building2 },
+        { href: '/broker/dashboard/leads', label: 'Leads', icon: Briefcase },
+      ];
+    case 'mortgage_partner':
+      return [
+        { href: '/mortgage-partner/dashboard/leads', label: 'Leads', icon: Briefcase },
+        { href: '/mortgage-partner/dashboard/products', label: 'Products', icon: Landmark },
+      ];
+    case 'admin':
+      return [
+        { href: '/admin/dashboard/approvals', label: 'Approvals', icon: Building2 },
+        { href: '/admin/dashboard/users', label: 'Users', icon: User },
+      ];
+    default:
+      return commonLinks;
+  }
+};
 
 const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -14,17 +61,23 @@ const Header = () => {
   const navigate = useNavigate();
   const { isAuthenticated, user, role, signOut } = useAuth();
 
-  const navLinks = [
+  // Base nav links shown to everyone
+  const baseNavLinks = [
     { href: '/', label: 'Home' },
+    { href: '/#properties', label: 'Properties' },
+    { href: '/compare', label: 'Compare' },
+    { href: '/mortgage', label: 'Mortgage' },
+  ];
+
+  // Additional links for unauthenticated users
+  const publicNavLinks = [
+    ...baseNavLinks,
     { href: '/#about', label: 'About' },
-    { href: '/#ai-advisory', label: 'AI Advisory' },
-    { href: '/#solutions', label: 'Solutions' },
-    { href: '/#tools', label: 'Investment Tools' },
-    { href: '/#properties', label: 'Verified Projects' },
-    { href: '/#intelligence', label: 'Market Intelligence' },
-    { href: '/#partners', label: 'Partners' },
     { href: '/#contact', label: 'Contact' },
   ];
+
+  // Get role-specific quick links
+  const roleQuickLinks = getRoleQuickLinks(role);
 
   const handleSignOut = async () => {
     await signOut();
@@ -38,7 +91,6 @@ const Header = () => {
   const handleNavClick = (href: string) => {
     setIsMobileMenuOpen(false);
     
-    // Handle anchor links
     if (href.includes('#')) {
       const id = href.split('#')[1];
       const element = document.getElementById(id);
@@ -47,6 +99,8 @@ const Header = () => {
       }
     }
   };
+
+  const navLinks = isAuthenticated ? baseNavLinks : publicNavLinks;
 
   return (
     <header className="bg-white/98 backdrop-blur-md shadow-sm sticky top-0 z-50 transition-all duration-300">
@@ -61,7 +115,7 @@ const Header = () => {
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center gap-8">
+          <nav className="hidden lg:flex items-center gap-6">
             {navLinks.map((link) => (
               <Link
                 key={link.label}
@@ -73,6 +127,23 @@ const Header = () => {
                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-secondary transition-all duration-300 group-hover:w-full" />
               </Link>
             ))}
+
+            {/* Role-specific quick links */}
+            {isAuthenticated && roleQuickLinks.length > 0 && (
+              <>
+                <span className="w-px h-5 bg-border" />
+                {roleQuickLinks.map((link) => (
+                  <Link
+                    key={link.href}
+                    to={link.href}
+                    className="flex items-center gap-1.5 text-muted-foreground font-medium hover:text-primary transition-colors"
+                  >
+                    <link.icon className="w-4 h-4" />
+                    {link.label}
+                  </Link>
+                ))}
+              </>
+            )}
           </nav>
 
           {/* Auth & Schedule Meeting Buttons */}
@@ -119,7 +190,7 @@ const Header = () => {
         {/* Mobile Navigation */}
         {isMobileMenuOpen && (
           <nav className="lg:hidden py-4 border-t animate-fade-in">
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-3">
               {navLinks.map((link) => (
                 <Link
                   key={link.label}
@@ -130,6 +201,28 @@ const Header = () => {
                   {link.label}
                 </Link>
               ))}
+
+              {/* Role-specific quick links on mobile */}
+              {isAuthenticated && roleQuickLinks.length > 0 && (
+                <>
+                  <div className="border-t border-border my-2" />
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider">Quick Access</p>
+                  {roleQuickLinks.map((link) => (
+                    <Link
+                      key={link.href}
+                      to={link.href}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="flex items-center gap-2 text-muted-foreground font-medium hover:text-primary py-2"
+                    >
+                      <link.icon className="w-4 h-4" />
+                      {link.label}
+                    </Link>
+                  ))}
+                </>
+              )}
+
+              <div className="border-t border-border my-2" />
+
               {isAuthenticated ? (
                 <>
                   <Link

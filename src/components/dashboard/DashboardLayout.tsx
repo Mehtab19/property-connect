@@ -180,6 +180,7 @@ export default DashboardLayout;
 export const buyerNavItems: NavItem[] = [
   { label: 'Dashboard', href: '/buyer/dashboard', icon: Home },
   { label: 'Saved Properties', href: '/buyer/dashboard/saved', icon: Heart },
+  { label: 'Comparisons', href: '/buyer/dashboard/comparisons', icon: FileText },
   { label: 'Visit Requests', href: '/buyer/dashboard/visits', icon: Calendar },
   { label: 'Messages', href: '/buyer/dashboard/messages', icon: MessageSquare },
   { label: 'Settings', href: '/buyer/dashboard/settings', icon: Settings },
@@ -189,6 +190,7 @@ export const investorNavItems: NavItem[] = [
   { label: 'Dashboard', href: '/investor/dashboard', icon: Home },
   { label: 'Portfolio', href: '/investor/dashboard/portfolio', icon: TrendingUp },
   { label: 'ROI Analytics', href: '/investor/dashboard/analytics', icon: BarChart3 },
+  { label: 'Comparisons', href: '/investor/dashboard/comparisons', icon: FileText },
   { label: 'Saved Properties', href: '/investor/dashboard/saved', icon: Heart },
   { label: 'Messages', href: '/investor/dashboard/messages', icon: MessageSquare },
   { label: 'Settings', href: '/investor/dashboard/settings', icon: Settings },
@@ -197,15 +199,36 @@ export const investorNavItems: NavItem[] = [
 export const developerNavItems: NavItem[] = [
   { label: 'Dashboard', href: '/developer/dashboard', icon: Home },
   { label: 'My Listings', href: '/developer/dashboard/listings', icon: Building2 },
+  { label: 'Add Property', href: '/developer/dashboard/add-property', icon: FileText },
   { label: 'Leads & Inquiries', href: '/developer/dashboard/leads', icon: MessageSquare },
   { label: 'Analytics', href: '/developer/dashboard/analytics', icon: BarChart3 },
   { label: 'Settings', href: '/developer/dashboard/settings', icon: Settings },
+];
+
+export const brokerNavItems: NavItem[] = [
+  { label: 'Dashboard', href: '/broker/dashboard', icon: Home },
+  { label: 'My Listings', href: '/broker/dashboard/listings', icon: Building2 },
+  { label: 'Add Listing', href: '/broker/dashboard/add-listing', icon: FileText },
+  { label: 'Assigned Leads', href: '/broker/dashboard/leads', icon: Users },
+  { label: 'Appointments', href: '/broker/dashboard/appointments', icon: Calendar },
+  { label: 'Settings', href: '/broker/dashboard/settings', icon: Settings },
+];
+
+export const mortgagePartnerNavItems: NavItem[] = [
+  { label: 'Dashboard', href: '/mortgage-partner/dashboard', icon: Home },
+  { label: 'Incoming Leads', href: '/mortgage-partner/dashboard/leads', icon: Users },
+  { label: 'Loan Products', href: '/mortgage-partner/dashboard/products', icon: FileText },
+  { label: 'Analytics', href: '/mortgage-partner/dashboard/analytics', icon: BarChart3 },
+  { label: 'Settings', href: '/mortgage-partner/dashboard/settings', icon: Settings },
 ];
 
 export const adminNavItems: NavItem[] = [
   { label: 'Dashboard', href: '/admin/dashboard', icon: Home },
   { label: 'User Management', href: '/admin/dashboard/users', icon: Users },
   { label: 'Property Approvals', href: '/admin/dashboard/approvals', icon: Building2 },
+  { label: 'Agent Management', href: '/admin/dashboard/agents', icon: Users },
+  { label: 'Partner Management', href: '/admin/dashboard/partners', icon: Building2 },
+  { label: 'AI Audit', href: '/admin/dashboard/ai-audit', icon: MessageSquare },
   { label: 'Platform Analytics', href: '/admin/dashboard/analytics', icon: BarChart3 },
   { label: 'Meeting Requests', href: '/admin/dashboard/meetings', icon: Calendar },
   { label: 'Settings', href: '/admin/dashboard/settings', icon: Settings },
