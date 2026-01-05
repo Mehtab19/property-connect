@@ -16,6 +16,7 @@ import CompareProperties from "./pages/CompareProperties";
 import MortgageHub from "./pages/MortgageHub";
 import Onboarding from "./pages/Onboarding";
 import Properties from "./pages/Properties";
+import Chat from "./pages/Chat";
 
 // Dashboards
 import BuyerDashboard from "./pages/dashboards/BuyerDashboard";
@@ -52,6 +53,7 @@ const App = () => (
             <Route path="/mortgage" element={<MortgageHub />} />
             <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/properties" element={<Properties />} />
+            <Route path="/chat" element={<Chat />} />
 
             {/* Buyer Dashboard Routes */}
             <Route
