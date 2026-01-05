@@ -19,6 +19,13 @@ import InvestorDashboard from "./pages/dashboards/InvestorDashboard";
 import DeveloperDashboard from "./pages/dashboards/DeveloperDashboard";
 import AdminDashboard from "./pages/dashboards/AdminDashboard";
 
+// Admin Pages
+import UserManagement from "./pages/admin/UserManagement";
+import PropertyApprovals from "./pages/admin/PropertyApprovals";
+import PlatformAnalytics from "./pages/admin/PlatformAnalytics";
+import MeetingRequests from "./pages/admin/MeetingRequests";
+import AdminSettings from "./pages/admin/AdminSettings";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -67,10 +74,50 @@ const App = () => (
 
             {/* Admin Dashboard Routes */}
             <Route
-              path="/admin/dashboard/*"
+              path="/admin/dashboard"
               element={
                 <ProtectedRoute allowedRoles={['admin']}>
                   <AdminDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/dashboard/users"
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <UserManagement />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/dashboard/approvals"
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <PropertyApprovals />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/dashboard/analytics"
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <PlatformAnalytics />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/dashboard/meetings"
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <MeetingRequests />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/dashboard/settings"
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <AdminSettings />
                 </ProtectedRoute>
               }
             />

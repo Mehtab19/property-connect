@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_logs: {
+        Row: {
+          action: string
+          created_at: string
+          details: Json | null
+          entity_id: string | null
+          entity_type: string
+          id: string
+          ip_address: string | null
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          details?: Json | null
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+          ip_address?: string | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          details?: Json | null
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          ip_address?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       meeting_requests: {
         Row: {
           created_at: string
@@ -71,6 +104,33 @@ export type Database = {
         }
         Relationships: []
       }
+      platform_settings: {
+        Row: {
+          category: string
+          id: string
+          key: string
+          updated_at: string
+          updated_by: string | null
+          value: Json
+        }
+        Insert: {
+          category?: string
+          id?: string
+          key: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: Json
+        }
+        Update: {
+          category?: string
+          id?: string
+          key?: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: Json
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -78,7 +138,10 @@ export type Database = {
           email: string | null
           full_name: string | null
           id: string
+          last_login: string | null
           phone: string | null
+          status: string
+          suspension_reason: string | null
           updated_at: string
           user_id: string
         }
@@ -88,7 +151,10 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: string
+          last_login?: string | null
           phone?: string | null
+          status?: string
+          suspension_reason?: string | null
           updated_at?: string
           user_id: string
         }
@@ -98,7 +164,85 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: string
+          last_login?: string | null
           phone?: string | null
+          status?: string
+          suspension_reason?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      properties: {
+        Row: {
+          address: string
+          amenities: string[] | null
+          approved_at: string | null
+          approved_by: string | null
+          area: string
+          bathrooms: number
+          bedrooms: number
+          city: string
+          country: string
+          created_at: string
+          description: string | null
+          documents: string[] | null
+          id: string
+          images: string[] | null
+          parking: number
+          price: number
+          property_type: string
+          rejection_reason: string | null
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address: string
+          amenities?: string[] | null
+          approved_at?: string | null
+          approved_by?: string | null
+          area: string
+          bathrooms?: number
+          bedrooms?: number
+          city: string
+          country?: string
+          created_at?: string
+          description?: string | null
+          documents?: string[] | null
+          id?: string
+          images?: string[] | null
+          parking?: number
+          price: number
+          property_type?: string
+          rejection_reason?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address?: string
+          amenities?: string[] | null
+          approved_at?: string | null
+          approved_by?: string | null
+          area?: string
+          bathrooms?: number
+          bedrooms?: number
+          city?: string
+          country?: string
+          created_at?: string
+          description?: string | null
+          documents?: string[] | null
+          id?: string
+          images?: string[] | null
+          parking?: number
+          price?: number
+          property_type?: string
+          rejection_reason?: string | null
+          status?: string
+          title?: string
           updated_at?: string
           user_id?: string
         }
