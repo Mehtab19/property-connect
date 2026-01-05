@@ -29,6 +29,7 @@ import PropertyApprovals from "./pages/admin/PropertyApprovals";
 import PlatformAnalytics from "./pages/admin/PlatformAnalytics";
 import MeetingRequests from "./pages/admin/MeetingRequests";
 import AdminSettings from "./pages/admin/AdminSettings";
+import LeadManagement from "./pages/admin/LeadManagement";
 
 const queryClient = new QueryClient();
 
@@ -144,6 +145,14 @@ const App = () => (
               element={
                 <ProtectedRoute allowedRoles={['admin']}>
                   <AdminSettings />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/dashboard/leads"
+              element={
+                <ProtectedRoute allowedRoles={['admin', 'broker']}>
+                  <LeadManagement />
                 </ProtectedRoute>
               }
             />

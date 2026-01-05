@@ -225,6 +225,7 @@ export const mortgagePartnerNavItems: NavItem[] = [
 export const adminNavItems: NavItem[] = [
   { label: 'Dashboard', href: '/admin/dashboard', icon: Home },
   { label: 'User Management', href: '/admin/dashboard/users', icon: Users },
+  { label: 'Lead Management', href: '/admin/dashboard/leads', icon: MessageSquare },
   { label: 'Property Approvals', href: '/admin/dashboard/approvals', icon: Building2 },
   { label: 'Agent Management', href: '/admin/dashboard/agents', icon: Users },
   { label: 'Partner Management', href: '/admin/dashboard/partners', icon: Building2 },
