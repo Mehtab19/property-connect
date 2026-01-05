@@ -17,7 +17,10 @@ const Footer = () => {
               <div className="w-12 h-12 bg-white/20 backdrop-blur rounded-lg flex items-center justify-center font-extrabold text-lg">
                 PX
               </div>
-              <h3 className="text-xl font-extrabold">PrimeX Estates</h3>
+              <div className="flex flex-col">
+                <h3 className="text-xl font-extrabold leading-tight">PrimeX Estate</h3>
+                <span className="text-xs font-semibold text-accent tracking-wider">PropertyX</span>
+              </div>
             </div>
             <p className="text-white/80 mb-6">
               Connecting you to premium properties through data-driven real estate advisory powered by PropertyX Intelligence AI engine.
@@ -52,26 +55,26 @@ const Footer = () => {
                 <Link to="/#properties" className="text-white/80 hover:text-white transition-colors">Properties</Link>
               </li>
               <li>
+                <Link to="/mortgage" className="text-white/80 hover:text-white transition-colors">Mortgage Hub</Link>
+              </li>
+              <li>
                 <Link to="/schedule" className="text-white/80 hover:text-white transition-colors">Schedule Meeting</Link>
               </li>
             </ul>
           </div>
 
-          {/* Property Types */}
+          {/* Legal Links */}
           <div>
-            <h4 className="text-lg font-bold mb-6">Property Types</h4>
+            <h4 className="text-lg font-bold mb-6">Legal</h4>
             <ul className="space-y-3">
               <li>
-                <a href="#" className="text-white/80 hover:text-white transition-colors">Residential</a>
+                <Link to="/privacy" className="text-white/80 hover:text-white transition-colors">Privacy Policy</Link>
               </li>
               <li>
-                <a href="#" className="text-white/80 hover:text-white transition-colors">Commercial</a>
+                <Link to="/terms" className="text-white/80 hover:text-white transition-colors">Terms of Service</Link>
               </li>
               <li>
-                <a href="#" className="text-white/80 hover:text-white transition-colors">Luxury</a>
-              </li>
-              <li>
-                <a href="#" className="text-white/80 hover:text-white transition-colors">Under Construction</a>
+                <Link to="/#contact" className="text-white/80 hover:text-white transition-colors">Contact</Link>
               </li>
             </ul>
           </div>
