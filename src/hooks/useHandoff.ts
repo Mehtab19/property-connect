@@ -68,67 +68,131 @@ export const useHandoff = () => {
       .filter(m => m.role === 'user')
       .map(m => m.content);
     
-    // Build summary
+    const allText = userMessages.join(' ').toLowerCase();
+    
+    // Build structured summary
     const summaryParts: string[] = [];
     
-    // Buyer intent
-    const intents: string[] = [];
-    for (const [triggerType, keywords] of Object.entries(HANDOFF_TRIGGERS)) {
-      for (const keyword of keywords) {
-        if (userMessages.some(m => m.toLowerCase().includes(keyword))) {
-          intents.push(triggerType);
-          break;
-        }
-      }
+    // 1. User Intent
+    let userIntent = 'Property inquiry';
+    if (allText.includes('invest') || allText.includes('roi') || allText.includes('rental yield')) {
+      userIntent = 'Investment opportunity assessment';
+    } else if (allText.includes('buy') || allText.includes('purchase') || allText.includes('home')) {
+      userIntent = 'Home purchase for personal use';
+    } else if (allText.includes('viewing') || allText.includes('visit')) {
+      userIntent = 'Property site visit request';
+    } else if (allText.includes('negotiat')) {
+      userIntent = 'Price negotiation assistance';
+    } else if (allText.includes('mortgage') || allText.includes('loan') || allText.includes('financing')) {
+      userIntent = 'Mortgage/financing consultation';
+    } else if (allText.includes('legal') || allText.includes('documentation')) {
+      userIntent = 'Legal/documentation assistance';
     }
-    if (intents.length > 0) {
-      summaryParts.push(`**Buyer Intent:** ${intents.join(', ')}`);
-    }
+    summaryParts.push(`**User Intent:** ${userIntent}`);
     
-    // Property interest
-    if (propertyTitle || propertyLocation) {
-      summaryParts.push(`**Property of Interest:** ${propertyTitle || 'Not specified'} ${propertyLocation ? `in ${propertyLocation}` : ''}`);
-    }
-    
-    // Budget extraction (simple pattern matching)
-    const budgetPatterns = /(?:budget|afford|spend|price range|looking for)[:\s]*(?:rs\.?|pkr|₨)?[\s]*(\d+(?:,\d+)*(?:\.\d+)?)\s*(?:lac|lakh|crore|cr|million|m|k)?/gi;
-    for (const msg of userMessages) {
-      const match = budgetPatterns.exec(msg);
+    // 2. Budget
+    let budget = 'Not specified';
+    const budgetPatterns = [
+      /(?:budget|afford|spend)[:\s]*(?:pkr|rs\.?)?[\s]*(\d+(?:,\d+)*)\s*(?:to|-)\s*(?:pkr|rs\.?)?[\s]*(\d+(?:,\d+)*)\s*(?:lac|lakh|crore|cr)?/gi,
+      /(\d+(?:,\d+)*)\s*(?:lac|lakh|crore|cr)\s*(?:to|-)\s*(\d+(?:,\d+)*)\s*(?:lac|lakh|crore|cr)?/gi,
+      /(?:budget|afford|spend)[:\s]*(?:pkr|rs\.?)?[\s]*(\d+(?:,\d+)*)\s*(?:lac|lakh|crore|cr)?/gi,
+    ];
+    for (const pattern of budgetPatterns) {
+      const match = pattern.exec(allText);
       if (match) {
-        summaryParts.push(`**Budget Mentioned:** ${match[0]}`);
+        budget = match[0].replace(/budget|afford|spend/gi, '').trim();
         break;
       }
     }
+    summaryParts.push(`**Budget:** ${budget}`);
     
-    // Financing need
-    if (userMessages.some(m => HANDOFF_TRIGGERS.financing.some(k => m.toLowerCase().includes(k)))) {
-      summaryParts.push(`**Financing Need:** Yes - User inquired about mortgage/loan options`);
+    // 3. Preferred Location
+    const cities = ['karachi', 'lahore', 'islamabad', 'rawalpindi', 'faisalabad', 'multan'];
+    const areas = ['dha', 'bahria', 'gulberg', 'clifton', 'defence', 'f-7', 'f-8', 'e-11'];
+    const foundLocations: string[] = [];
+    for (const city of cities) {
+      if (allText.includes(city)) {
+        foundLocations.push(city.charAt(0).toUpperCase() + city.slice(1));
+      }
+    }
+    for (const area of areas) {
+      if (allText.includes(area)) {
+        foundLocations.push(area.toUpperCase());
+      }
+    }
+    if (propertyLocation) {
+      foundLocations.unshift(propertyLocation);
+    }
+    summaryParts.push(`**Preferred Location:** ${foundLocations.length > 0 ? [...new Set(foundLocations)].join(', ') : 'Not specified'}`);
+    
+    // 4. Selected Properties
+    if (propertyTitle) {
+      summaryParts.push(`**Selected Property:** ${propertyTitle}`);
     }
     
-    // Risk flags
+    // 5. Financing Needs
+    let financingNeeds = 'Not discussed';
+    if (allText.includes('cash') && !allText.includes('mortgage')) {
+      financingNeeds = 'Cash purchase - no financing needed';
+    } else if (allText.includes('mortgage') || allText.includes('home loan') || allText.includes('bank loan')) {
+      financingNeeds = 'Requires mortgage/bank financing';
+    } else if (allText.includes('emi') || allText.includes('installment')) {
+      financingNeeds = 'Prefers installment plan';
+    } else if (allText.includes('pre-approv')) {
+      financingNeeds = 'Seeking pre-approval';
+    } else if (allText.includes('islamic') || allText.includes('shariah')) {
+      financingNeeds = 'Prefers Islamic/Shariah-compliant financing';
+    }
+    summaryParts.push(`**Financing Needs:** ${financingNeeds}`);
+    
+    // 6. Risk Flags
     const riskFlags: string[] = [];
-    if (userMessages.some(m => m.toLowerCase().includes('urgent') || m.toLowerCase().includes('asap'))) {
+    if (allText.includes('delay') || allText.includes('construction')) {
+      riskFlags.push('Construction timeline concerns');
+    }
+    if (allText.includes('developer') && (allText.includes('trust') || allText.includes('reliable'))) {
+      riskFlags.push('Developer credibility verification needed');
+    }
+    if (allText.includes('legal') || allText.includes('title') || allText.includes('documentation')) {
+      riskFlags.push('Legal verification required');
+    }
+    if (allText.includes('market') && (allText.includes('down') || allText.includes('crash') || allText.includes('risk'))) {
+      riskFlags.push('Market volatility concerns');
+    }
+    if (allText.includes('first time') || allText.includes('never bought')) {
+      riskFlags.push('First-time buyer - needs guidance');
+    }
+    if (allText.includes('urgent') || allText.includes('asap') || allText.includes('quickly')) {
       riskFlags.push('Urgent timeline');
     }
-    if (userMessages.some(m => m.toLowerCase().includes('first time') || m.toLowerCase().includes('never bought'))) {
-      riskFlags.push('First-time buyer');
-    }
     if (riskFlags.length > 0) {
-      summaryParts.push(`**Risk Flags:** ${riskFlags.join(', ')}`);
+      summaryParts.push(`**Risk Flags:**\n${riskFlags.map(r => `• ${r}`).join('\n')}`);
     }
     
-    // Confidence
+    // 7. Next Steps
+    const nextSteps: string[] = [];
+    if (userIntent.includes('site visit')) {
+      nextSteps.push('Schedule property viewing');
+    }
+    if (userIntent.includes('negotiation')) {
+      nextSteps.push('Prepare negotiation strategy');
+    }
+    if (financingNeeds.includes('mortgage') || financingNeeds.includes('financing')) {
+      nextSteps.push('Connect with mortgage partner');
+    }
+    if (riskFlags.some(r => r.includes('Legal'))) {
+      nextSteps.push('Verify property documentation');
+    }
+    nextSteps.push('Assign dedicated agent');
+    nextSteps.push('Follow up within 24 hours');
+    summaryParts.push(`**Recommended Next Steps:**\n${nextSteps.map((s, i) => `${i + 1}. ${s}`).join('\n')}`);
+    
+    // 8. Confidence score
     if (context.confidenceScore !== undefined) {
       summaryParts.push(`**AI Confidence Score:** ${(context.confidenceScore * 100).toFixed(0)}%`);
     }
     
-    // Conversation summary
-    if (userMessages.length > 0) {
-      const recentMessages = userMessages.slice(-3).join(' | ');
-      summaryParts.push(`**Recent Queries:** ${recentMessages.slice(0, 200)}...`);
-    }
-    
-    return summaryParts.join('\n') || 'User requested human assistance';
+    return summaryParts.join('\n\n') || 'User requested human assistance';
   }, []);
 
   // Find best matching agent based on criteria
