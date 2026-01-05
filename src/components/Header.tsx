@@ -111,7 +111,10 @@ const Header = () => {
             <div className="w-12 h-12 gradient-primary rounded-lg flex items-center justify-center text-white font-extrabold text-lg">
               PX
             </div>
-            <h1 className="text-xl font-extrabold text-primary">PrimeX Estates</h1>
+            <div className="flex flex-col">
+              <h1 className="text-xl font-extrabold text-primary leading-tight">PrimeX Estate</h1>
+              <span className="text-xs font-semibold text-secondary tracking-wider">PropertyX</span>
+            </div>
           </Link>
 
           {/* Desktop Navigation */}
