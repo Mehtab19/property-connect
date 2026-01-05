@@ -50,10 +50,10 @@ const HeroSection = () => {
             <Building className="w-5 h-5" />
             Explore Properties
           </a>
-          <Link to="/schedule" className="btn-accent">
+          <a href="#ai-advisory" className="btn-accent">
             <Bot className="w-5 h-5" />
-            Schedule Meeting
-          </Link>
+            Try AI Advisor
+          </a>
         </div>
 
         {/* Stats */}

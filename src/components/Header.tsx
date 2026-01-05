@@ -17,7 +17,12 @@ const Header = () => {
   const navLinks = [
     { href: '/', label: 'Home' },
     { href: '/#about', label: 'About' },
-    { href: '/#properties', label: 'Properties' },
+    { href: '/#ai-advisory', label: 'AI Advisory' },
+    { href: '/#solutions', label: 'Solutions' },
+    { href: '/#tools', label: 'Investment Tools' },
+    { href: '/#properties', label: 'Verified Projects' },
+    { href: '/#intelligence', label: 'Market Intelligence' },
+    { href: '/#partners', label: 'Partners' },
     { href: '/#contact', label: 'Contact' },
   ];
 
