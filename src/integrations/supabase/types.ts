@@ -47,6 +47,156 @@ export type Database = {
         }
         Relationships: []
       }
+      agents: {
+        Row: {
+          agency_name: string | null
+          areas_served: string[] | null
+          bio: string | null
+          created_at: string
+          id: string
+          license_number: string | null
+          rating: number | null
+          specialization: string[] | null
+          total_reviews: number | null
+          updated_at: string
+          user_id: string
+          verified: boolean | null
+        }
+        Insert: {
+          agency_name?: string | null
+          areas_served?: string[] | null
+          bio?: string | null
+          created_at?: string
+          id?: string
+          license_number?: string | null
+          rating?: number | null
+          specialization?: string[] | null
+          total_reviews?: number | null
+          updated_at?: string
+          user_id: string
+          verified?: boolean | null
+        }
+        Update: {
+          agency_name?: string | null
+          areas_served?: string[] | null
+          bio?: string | null
+          created_at?: string
+          id?: string
+          license_number?: string | null
+          rating?: number | null
+          specialization?: string[] | null
+          total_reviews?: number | null
+          updated_at?: string
+          user_id?: string
+          verified?: boolean | null
+        }
+        Relationships: []
+      }
+      conversations: {
+        Row: {
+          context: Json | null
+          created_at: string
+          id: string
+          property_id: string | null
+          title: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          context?: Json | null
+          created_at?: string
+          id?: string
+          property_id?: string | null
+          title?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          context?: Json | null
+          created_at?: string
+          id?: string
+          property_id?: string | null
+          title?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversations_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      leads: {
+        Row: {
+          agent_id: string | null
+          ai_summary: string | null
+          created_at: string
+          id: string
+          lead_type: string
+          mortgage_partner_id: string | null
+          notes: string | null
+          priority: string | null
+          property_id: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          agent_id?: string | null
+          ai_summary?: string | null
+          created_at?: string
+          id?: string
+          lead_type: string
+          mortgage_partner_id?: string | null
+          notes?: string | null
+          priority?: string | null
+          property_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          agent_id?: string | null
+          ai_summary?: string | null
+          created_at?: string
+          id?: string
+          lead_type?: string
+          mortgage_partner_id?: string | null
+          notes?: string | null
+          priority?: string | null
+          property_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leads_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_mortgage_partner_id_fkey"
+            columns: ["mortgage_partner_id"]
+            isOneToOne: false
+            referencedRelation: "mortgage_partners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       meeting_requests: {
         Row: {
           created_at: string
@@ -101,6 +251,98 @@ export type Database = {
           status?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      messages: {
+        Row: {
+          content: string
+          conversation_id: string
+          created_at: string
+          id: string
+          metadata: Json | null
+          role: string
+        }
+        Insert: {
+          content: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          role: string
+        }
+        Update: {
+          content?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mortgage_partners: {
+        Row: {
+          bank_name: string
+          contact_email: string | null
+          contact_phone: string | null
+          created_at: string
+          features: string[] | null
+          id: string
+          interest_rate_max: number | null
+          interest_rate_min: number | null
+          logo_url: string | null
+          max_loan_amount: number | null
+          max_tenure_years: number | null
+          processing_fee_percent: number | null
+          updated_at: string
+          user_id: string
+          verified: boolean | null
+          website_url: string | null
+        }
+        Insert: {
+          bank_name: string
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          features?: string[] | null
+          id?: string
+          interest_rate_max?: number | null
+          interest_rate_min?: number | null
+          logo_url?: string | null
+          max_loan_amount?: number | null
+          max_tenure_years?: number | null
+          processing_fee_percent?: number | null
+          updated_at?: string
+          user_id: string
+          verified?: boolean | null
+          website_url?: string | null
+        }
+        Update: {
+          bank_name?: string
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          features?: string[] | null
+          id?: string
+          interest_rate_max?: number | null
+          interest_rate_min?: number | null
+          logo_url?: string | null
+          max_loan_amount?: number | null
+          max_tenure_years?: number | null
+          processing_fee_percent?: number | null
+          updated_at?: string
+          user_id?: string
+          verified?: boolean | null
+          website_url?: string | null
         }
         Relationships: []
       }
@@ -248,6 +490,92 @@ export type Database = {
         }
         Relationships: []
       }
+      property_analyses: {
+        Row: {
+          ai_summary: string | null
+          appreciation_forecast: number | null
+          confidence_score: number | null
+          created_at: string
+          id: string
+          market_trends: Json | null
+          property_id: string
+          recommended_actions: string[] | null
+          rental_yield: number | null
+          risk_flags: string[] | null
+          risk_score: number | null
+          roi_estimate: number | null
+          user_id: string
+        }
+        Insert: {
+          ai_summary?: string | null
+          appreciation_forecast?: number | null
+          confidence_score?: number | null
+          created_at?: string
+          id?: string
+          market_trends?: Json | null
+          property_id: string
+          recommended_actions?: string[] | null
+          rental_yield?: number | null
+          risk_flags?: string[] | null
+          risk_score?: number | null
+          roi_estimate?: number | null
+          user_id: string
+        }
+        Update: {
+          ai_summary?: string | null
+          appreciation_forecast?: number | null
+          confidence_score?: number | null
+          created_at?: string
+          id?: string
+          market_trends?: Json | null
+          property_id?: string
+          recommended_actions?: string[] | null
+          rental_yield?: number | null
+          risk_flags?: string[] | null
+          risk_score?: number | null
+          roi_estimate?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_analyses_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      property_comparisons: {
+        Row: {
+          comparison_data: Json | null
+          created_at: string
+          id: string
+          name: string | null
+          property_ids: string[]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          comparison_data?: Json | null
+          created_at?: string
+          id?: string
+          name?: string | null
+          property_ids: string[]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          comparison_data?: Json | null
+          created_at?: string
+          id?: string
+          name?: string | null
+          property_ids?: string[]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       saved_properties: {
         Row: {
           created_at: string
@@ -308,7 +636,13 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "buyer" | "investor" | "developer"
+      app_role:
+        | "admin"
+        | "buyer"
+        | "investor"
+        | "developer"
+        | "broker"
+        | "mortgage_partner"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -436,7 +770,14 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "buyer", "investor", "developer"],
+      app_role: [
+        "admin",
+        "buyer",
+        "investor",
+        "developer",
+        "broker",
+        "mortgage_partner",
+      ],
     },
   },
 } as const
