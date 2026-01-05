@@ -1,23 +1,29 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { MessageCircle, X, Send, Mic, MicOff, Volume2, VolumeX } from 'lucide-react';
+import { MessageCircle, X, Send, Mic, MicOff, Volume2, VolumeX, UserCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { useHandoff, HandoffContext } from '@/hooks/useHandoff';
+import HandoffForm from '@/components/HandoffForm';
 
 interface Message {
   id: string;
   text: string;
   type: 'user' | 'bot';
   timestamp: Date;
+  confidenceScore?: number;
 }
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chatbot`;
 
 const ChatbotWidget = () => {
   const { toast } = useToast();
+  const { detectHandoffTrigger, shouldTriggerLowConfidence } = useHandoff();
   const [isOpen, setIsOpen] = useState(false);
+  const [showHandoffForm, setShowHandoffForm] = useState(false);
+  const [handoffTrigger, setHandoffTrigger] = useState<string>('userRequested');
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -39,12 +45,49 @@ const ChatbotWidget = () => {
 
   useEffect(() => {
     scrollToBottom();
+  }, [messages, showHandoffForm]);
+
+  // Build conversation history for handoff context
+  const getHandoffContext = useCallback((): HandoffContext => {
+    const chatHistory = messages
+      .filter(m => m.id !== '1')
+      .map(m => ({
+        role: (m.type === 'user' ? 'user' : 'assistant') as 'user' | 'assistant',
+        content: m.text,
+      }));
+    
+    // Get last bot message confidence score
+    const lastBotMessage = [...messages].reverse().find(m => m.type === 'bot');
+    
+    return {
+      conversationHistory: chatHistory,
+      confidenceScore: lastBotMessage?.confidenceScore,
+    };
   }, [messages]);
+
+  // Handle handoff trigger detection
+  const checkForHandoffTrigger = useCallback((userMessage: string, botConfidence?: number) => {
+    // Check for keyword triggers
+    const trigger = detectHandoffTrigger(userMessage);
+    if (trigger) {
+      setHandoffTrigger(trigger);
+      // Show handoff suggestion in next message
+      return trigger;
+    }
+    
+    // Check for low confidence
+    if (shouldTriggerLowConfidence(botConfidence)) {
+      setHandoffTrigger('lowConfidence');
+      return 'lowConfidence';
+    }
+    
+    return null;
+  }, [detectHandoffTrigger, shouldTriggerLowConfidence]);
 
   const streamChat = useCallback(async (
     chatMessages: { role: 'user' | 'assistant'; content: string }[],
     onDelta: (text: string) => void,
-    onDone: () => void
+    onDone: (confidence?: number) => void
   ) => {
     const resp = await fetch(CHAT_URL, {
       method: 'POST',
@@ -110,9 +153,10 @@ const ChatbotWidget = () => {
   const sendMessage = async () => {
     if (!inputValue.trim() || isLoading) return;
 
+    const userMessageText = inputValue;
     const userMessage: Message = {
       id: Date.now().toString(),
-      text: inputValue,
+      text: userMessageText,
       type: 'user',
       timestamp: new Date(),
     };
@@ -121,9 +165,12 @@ const ChatbotWidget = () => {
     setInputValue('');
     setIsLoading(true);
 
+    // Check for handoff triggers in user message
+    const trigger = checkForHandoffTrigger(userMessageText);
+
     // Build conversation history
     const chatHistory = messages
-      .filter(m => m.id !== '1') // Skip initial greeting for context
+      .filter(m => m.id !== '1')
       .map(m => ({
         role: (m.type === 'user' ? 'user' : 'assistant') as 'user' | 'assistant',
         content: m.text,
@@ -155,6 +202,18 @@ const ChatbotWidget = () => {
         },
         () => {
           setIsLoading(false);
+          
+          // If trigger was detected, show handoff suggestion after response
+          if (trigger) {
+            setTimeout(() => {
+              setMessages((prev) => [...prev, {
+                id: `handoff-suggest-${Date.now()}`,
+                text: `I'd be happy to connect you with a human expert who can assist further with your ${trigger === 'siteVisit' ? 'property visit' : trigger === 'negotiation' ? 'negotiation needs' : trigger === 'legal' ? 'legal requirements' : trigger === 'financing' ? 'financing options' : 'request'}. Would you like me to arrange that?`,
+                type: 'bot',
+                timestamp: new Date(),
+              }]);
+            }, 500);
+          }
         }
       );
     } catch (error) {
@@ -180,6 +239,21 @@ const ChatbotWidget = () => {
       e.preventDefault();
       sendMessage();
     }
+  };
+
+  const handleTalkToAgent = () => {
+    setHandoffTrigger('userRequested');
+    setShowHandoffForm(true);
+  };
+
+  const handleHandoffSuccess = (leadId: string) => {
+    setMessages((prev) => [...prev, {
+      id: `handoff-success-${Date.now()}`,
+      text: `Great! I've connected you with an agent. They'll reach out to you shortly via your preferred channel. Your request reference: ${leadId.slice(0, 8)}`,
+      type: 'bot',
+      timestamp: new Date(),
+    }]);
+    setShowHandoffForm(false);
   };
 
   const toggleRecording = async () => {
@@ -240,7 +314,7 @@ const ChatbotWidget = () => {
     <div className="fixed bottom-6 right-6 z-50">
       {/* Chat Container */}
       {isOpen && (
-        <div className="absolute bottom-20 right-0 w-[380px] h-[500px] bg-background rounded-2xl shadow-2xl border border-border flex flex-col overflow-hidden animate-in slide-in-from-bottom-4 duration-300">
+        <div className="absolute bottom-20 right-0 w-[400px] h-[550px] bg-background rounded-2xl shadow-2xl border border-border flex flex-col overflow-hidden animate-in slide-in-from-bottom-4 duration-300">
           {/* Header */}
           <div className="bg-gradient-to-r from-primary to-secondary p-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -254,95 +328,130 @@ const ChatbotWidget = () => {
                 </p>
               </div>
             </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setIsOpen(false)}
-              className="text-white hover:bg-white/20 transition-transform hover:rotate-90"
-            >
-              <X className="w-5 h-5" />
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleTalkToAgent}
+                className="text-white hover:bg-white/20 text-xs h-8"
+              >
+                <UserCheck className="w-4 h-4 mr-1" />
+                Talk to Agent
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsOpen(false)}
+                className="text-white hover:bg-white/20 transition-transform hover:rotate-90"
+              >
+                <X className="w-5 h-5" />
+              </Button>
+            </div>
           </div>
 
-          {/* Messages */}
+          {/* Messages or Handoff Form */}
           <ScrollArea className="flex-1 p-4">
-            <div className="flex flex-col gap-3">
-              {messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={cn(
-                    'max-w-[85%] animate-in fade-in slide-in-from-bottom-2 duration-300',
-                    message.type === 'user' ? 'ml-auto' : 'mr-auto'
-                  )}
-                >
+            {showHandoffForm ? (
+              <HandoffForm
+                context={getHandoffContext()}
+                triggerReason={handoffTrigger}
+                onSuccess={handleHandoffSuccess}
+                onCancel={() => setShowHandoffForm(false)}
+              />
+            ) : (
+              <div className="flex flex-col gap-3">
+                {messages.map((message) => (
                   <div
+                    key={message.id}
                     className={cn(
-                      'p-3 rounded-2xl',
-                      message.type === 'user'
-                        ? 'bg-gradient-to-r from-primary to-secondary text-white rounded-br-md'
-                        : 'bg-gradient-to-r from-primary to-secondary text-white rounded-bl-md'
+                      'max-w-[85%] animate-in fade-in slide-in-from-bottom-2 duration-300',
+                      message.type === 'user' ? 'ml-auto' : 'mr-auto'
                     )}
                   >
-                    <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.text}</p>
-                  </div>
-                  {message.type === 'bot' && message.text && (
-                    <button
-                      onClick={() => speakMessage(message.text)}
-                      className="mt-1 p-1.5 rounded-full bg-secondary hover:bg-secondary/80 text-white transition-all hover:scale-110"
-                      title={isSpeaking ? 'Stop speaking' : 'Listen to message'}
+                    <div
+                      className={cn(
+                        'p-3 rounded-2xl',
+                        message.type === 'user'
+                          ? 'bg-gradient-to-r from-primary to-secondary text-white rounded-br-md'
+                          : 'bg-gradient-to-r from-primary to-secondary text-white rounded-bl-md'
+                      )}
                     >
-                      {isSpeaking ? <VolumeX className="w-3 h-3" /> : <Volume2 className="w-3 h-3" />}
-                    </button>
-                  )}
-                </div>
-              ))}
-              
-              {isLoading && messages[messages.length - 1]?.text === '' && (
-                <div className="mr-auto">
-                  <div className="bg-muted p-3 rounded-2xl rounded-bl-md flex items-center gap-1.5">
-                    <span className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                    <span className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                    <span className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                      <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.text}</p>
+                    </div>
+                    {message.type === 'bot' && message.text && (
+                      <div className="flex items-center gap-2 mt-1">
+                        <button
+                          onClick={() => speakMessage(message.text)}
+                          className="p-1.5 rounded-full bg-secondary hover:bg-secondary/80 text-white transition-all hover:scale-110"
+                          title={isSpeaking ? 'Stop speaking' : 'Listen to message'}
+                        >
+                          {isSpeaking ? <VolumeX className="w-3 h-3" /> : <Volume2 className="w-3 h-3" />}
+                        </button>
+                        {message.id.startsWith('handoff-suggest') && (
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            className="h-7 text-xs"
+                            onClick={() => setShowHandoffForm(true)}
+                          >
+                            <UserCheck className="w-3 h-3 mr-1" />
+                            Yes, connect me
+                          </Button>
+                        )}
+                      </div>
+                    )}
                   </div>
-                </div>
-              )}
-              <div ref={messagesEndRef} />
-            </div>
+                ))}
+                
+                {isLoading && messages[messages.length - 1]?.text === '' && (
+                  <div className="mr-auto">
+                    <div className="bg-muted p-3 rounded-2xl rounded-bl-md flex items-center gap-1.5">
+                      <span className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                      <span className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                      <span className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                    </div>
+                  </div>
+                )}
+                <div ref={messagesEndRef} />
+              </div>
+            )}
           </ScrollArea>
 
-          {/* Input */}
-          <div className="p-3 border-t border-border flex items-center gap-2">
-            <Input
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="Type your message..."
-              className="flex-1 rounded-full border-muted"
-              disabled={isLoading}
-            />
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={toggleRecording}
-              disabled={isLoading}
-              className={cn(
-                'rounded-full transition-colors',
-                isRecording
-                  ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90'
-                  : 'hover:bg-secondary hover:text-secondary-foreground'
-              )}
-            >
-              {isRecording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-            </Button>
-            <Button
-              onClick={sendMessage}
-              size="icon"
-              disabled={isLoading || !inputValue.trim()}
-              className="rounded-full bg-secondary hover:bg-secondary/90"
-            >
-              <Send className="w-4 h-4" />
-            </Button>
-          </div>
+          {/* Input - hidden when showing handoff form */}
+          {!showHandoffForm && (
+            <div className="p-3 border-t border-border flex items-center gap-2">
+              <Input
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder="Type your message..."
+                className="flex-1 rounded-full border-muted"
+                disabled={isLoading}
+              />
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={toggleRecording}
+                disabled={isLoading}
+                className={cn(
+                  'rounded-full transition-colors',
+                  isRecording
+                    ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90'
+                    : 'hover:bg-secondary hover:text-secondary-foreground'
+                )}
+              >
+                {isRecording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+              </Button>
+              <Button
+                onClick={sendMessage}
+                size="icon"
+                disabled={isLoading || !inputValue.trim()}
+                className="rounded-full bg-secondary hover:bg-secondary/90"
+              >
+                <Send className="w-4 h-4" />
+              </Button>
+            </div>
+          )}
         </div>
       )}
 
