@@ -19,6 +19,8 @@ import MortgageHub from "./pages/MortgageHub";
 import BuyerDashboard from "./pages/dashboards/BuyerDashboard";
 import InvestorDashboard from "./pages/dashboards/InvestorDashboard";
 import DeveloperDashboard from "./pages/dashboards/DeveloperDashboard";
+import BrokerDashboard from "./pages/dashboards/BrokerDashboard";
+import MortgagePartnerDashboard from "./pages/dashboards/MortgagePartnerDashboard";
 import AdminDashboard from "./pages/dashboards/AdminDashboard";
 
 // Admin Pages
@@ -72,6 +74,26 @@ const App = () => (
               element={
                 <ProtectedRoute allowedRoles={['developer', 'admin']}>
                   <DeveloperDashboard />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Broker Dashboard Routes */}
+            <Route
+              path="/broker/dashboard/*"
+              element={
+                <ProtectedRoute allowedRoles={['broker', 'admin']}>
+                  <BrokerDashboard />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Mortgage Partner Dashboard Routes */}
+            <Route
+              path="/mortgage-partner/dashboard/*"
+              element={
+                <ProtectedRoute allowedRoles={['mortgage_partner', 'admin']}>
+                  <MortgagePartnerDashboard />
                 </ProtectedRoute>
               }
             />
