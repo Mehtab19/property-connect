@@ -11,12 +11,17 @@ const HANDOFF_TRIGGERS = {
   financing: ['loan', 'mortgage', 'financing', 'home loan', 'bank loan', 'emi', 'down payment', 'pre-approval'],
 };
 
+export type LeadType = 'viewing' | 'agent_help' | 'mortgage' | 'developer_inquiry';
+
 export interface HandoffContext {
   conversationHistory: Array<{ role: 'user' | 'assistant'; content: string }>;
   propertyId?: string;
   propertyTitle?: string;
   propertyLocation?: string;
+  propertyType?: string;
+  propertyArea?: string;
   confidenceScore?: number;
+  shortlistIds?: string[];
 }
 
 export interface HandoffFormData {
@@ -25,19 +30,29 @@ export interface HandoffFormData {
   phone: string;
   preferredTime: string;
   preferredChannel: 'phone' | 'whatsapp' | 'email';
+  leadType: LeadType;
+  financingNeeded: boolean;
   message?: string;
 }
 
 interface AgentMatchCriteria {
   location?: string;
   propertyType?: string;
-  language?: string;
+  area?: string;
+}
+
+export interface AssignedAgent {
+  id: string;
+  name?: string;
+  agencyName?: string;
+  rating?: number;
 }
 
 export const useHandoff = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [assignedAgent, setAssignedAgent] = useState<AssignedAgent | null>(null);
 
   // Check if message contains handoff triggers
   const detectHandoffTrigger = useCallback((message: string): string | null => {
@@ -60,8 +75,8 @@ export const useHandoff = () => {
   }, []);
 
   // Generate AI summary from conversation
-  const generateAISummary = useCallback((context: HandoffContext): string => {
-    const { conversationHistory, propertyTitle, propertyLocation } = context;
+  const generateAISummary = useCallback((context: HandoffContext, formData?: HandoffFormData): string => {
+    const { conversationHistory, propertyTitle, propertyLocation, shortlistIds } = context;
     
     // Extract key information from conversation
     const userMessages = conversationHistory
@@ -73,9 +88,17 @@ export const useHandoff = () => {
     // Build structured summary
     const summaryParts: string[] = [];
     
-    // 1. User Intent
+    // 1. User Intent (from lead type if available)
     let userIntent = 'Property inquiry';
-    if (allText.includes('invest') || allText.includes('roi') || allText.includes('rental yield')) {
+    if (formData?.leadType === 'viewing') {
+      userIntent = 'Property site visit request';
+    } else if (formData?.leadType === 'mortgage') {
+      userIntent = 'Mortgage/financing consultation';
+    } else if (formData?.leadType === 'developer_inquiry') {
+      userIntent = 'Developer project inquiry';
+    } else if (formData?.leadType === 'agent_help') {
+      userIntent = 'General agent assistance';
+    } else if (allText.includes('invest') || allText.includes('roi') || allText.includes('rental yield')) {
       userIntent = 'Investment opportunity assessment';
     } else if (allText.includes('buy') || allText.includes('purchase') || allText.includes('home')) {
       userIntent = 'Home purchase for personal use';
@@ -130,9 +153,18 @@ export const useHandoff = () => {
       summaryParts.push(`**Selected Property:** ${propertyTitle}`);
     }
     
-    // 5. Financing Needs
+    // 5. Shortlisted Properties
+    if (shortlistIds && shortlistIds.length > 0) {
+      summaryParts.push(`**Shortlisted Properties:** ${shortlistIds.length} properties`);
+    }
+    
+    // 6. Financing Needs
     let financingNeeds = 'Not discussed';
-    if (allText.includes('cash') && !allText.includes('mortgage')) {
+    if (formData?.financingNeeded === true) {
+      financingNeeds = 'Yes - requires financing assistance';
+    } else if (formData?.financingNeeded === false) {
+      financingNeeds = 'No financing needed';
+    } else if (allText.includes('cash') && !allText.includes('mortgage')) {
       financingNeeds = 'Cash purchase - no financing needed';
     } else if (allText.includes('mortgage') || allText.includes('home loan') || allText.includes('bank loan')) {
       financingNeeds = 'Requires mortgage/bank financing';
@@ -145,7 +177,7 @@ export const useHandoff = () => {
     }
     summaryParts.push(`**Financing Needs:** ${financingNeeds}`);
     
-    // 6. Risk Flags
+    // 7. Risk Flags
     const riskFlags: string[] = [];
     if (allText.includes('delay') || allText.includes('construction')) {
       riskFlags.push('Construction timeline concerns');
@@ -169,15 +201,15 @@ export const useHandoff = () => {
       summaryParts.push(`**Risk Flags:**\n${riskFlags.map(r => `• ${r}`).join('\n')}`);
     }
     
-    // 7. Next Steps
+    // 8. Next Steps
     const nextSteps: string[] = [];
-    if (userIntent.includes('site visit')) {
+    if (formData?.leadType === 'viewing' || userIntent.includes('site visit')) {
       nextSteps.push('Schedule property viewing');
     }
     if (userIntent.includes('negotiation')) {
       nextSteps.push('Prepare negotiation strategy');
     }
-    if (financingNeeds.includes('mortgage') || financingNeeds.includes('financing')) {
+    if (formData?.financingNeeded || financingNeeds.includes('mortgage') || financingNeeds.includes('financing')) {
       nextSteps.push('Connect with mortgage partner');
     }
     if (riskFlags.some(r => r.includes('Legal'))) {
@@ -187,7 +219,7 @@ export const useHandoff = () => {
     nextSteps.push('Follow up within 24 hours');
     summaryParts.push(`**Recommended Next Steps:**\n${nextSteps.map((s, i) => `${i + 1}. ${s}`).join('\n')}`);
     
-    // 8. Confidence score
+    // 9. Confidence score
     if (context.confidenceScore !== undefined) {
       summaryParts.push(`**AI Confidence Score:** ${(context.confidenceScore * 100).toFixed(0)}%`);
     }
@@ -196,14 +228,13 @@ export const useHandoff = () => {
   }, []);
 
   // Find best matching agent based on criteria
-  const findMatchingAgent = useCallback(async (criteria: AgentMatchCriteria): Promise<string | null> => {
+  const findMatchingAgent = useCallback(async (criteria: AgentMatchCriteria): Promise<AssignedAgent | null> => {
     try {
-      let query = supabase
+      // Get agents with their profile info
+      const { data: agents, error } = await supabase
         .from('agents')
-        .select('id, areas_served, specialization')
+        .select('id, user_id, areas_served, specialization, agency_name, rating')
         .eq('verified', true);
-      
-      const { data: agents, error } = await query;
       
       if (error || !agents || agents.length === 0) {
         console.log('No verified agents found');
@@ -213,6 +244,17 @@ export const useHandoff = () => {
       // Score agents based on matching criteria
       const scoredAgents = agents.map(agent => {
         let score = 0;
+        
+        // Area match (highest priority) - match property area with agent's areas_served
+        if (criteria.area && agent.areas_served) {
+          const areaLower = criteria.area.toLowerCase();
+          if (agent.areas_served.some((served: string) => 
+            served.toLowerCase().includes(areaLower) || 
+            areaLower.includes(served.toLowerCase())
+          )) {
+            score += 15;
+          }
+        }
         
         // Location match
         if (criteria.location && agent.areas_served) {
@@ -225,13 +267,19 @@ export const useHandoff = () => {
           }
         }
         
-        // Property type match
+        // Property type match with specialization
         if (criteria.propertyType && agent.specialization) {
           if (agent.specialization.some((spec: string) => 
-            spec.toLowerCase().includes(criteria.propertyType!.toLowerCase())
+            spec.toLowerCase().includes(criteria.propertyType!.toLowerCase()) ||
+            criteria.propertyType!.toLowerCase().includes(spec.toLowerCase())
           )) {
-            score += 5;
+            score += 8;
           }
+        }
+        
+        // Bonus for rating
+        if (agent.rating) {
+          score += agent.rating;
         }
         
         return { ...agent, score };
@@ -239,7 +287,23 @@ export const useHandoff = () => {
       
       // Sort by score and return best match
       scoredAgents.sort((a, b) => b.score - a.score);
-      return scoredAgents[0]?.id || null;
+      const bestAgent = scoredAgents[0];
+      
+      if (!bestAgent) return null;
+
+      // Get agent's profile name
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('user_id', bestAgent.user_id)
+        .single();
+      
+      return {
+        id: bestAgent.id,
+        name: profile?.full_name || undefined,
+        agencyName: bestAgent.agency_name || undefined,
+        rating: bestAgent.rating || undefined,
+      };
     } catch (error) {
       console.error('Error finding matching agent:', error);
       return null;
@@ -271,9 +335,8 @@ export const useHandoff = () => {
   // Main handoff function
   const initiateHandoff = useCallback(async (
     formData: HandoffFormData,
-    context: HandoffContext,
-    triggerReason: string
-  ): Promise<{ success: boolean; leadId?: string }> => {
+    context: HandoffContext
+  ): Promise<{ success: boolean; leadId?: string; agent?: AssignedAgent }> => {
     if (!user?.id) {
       toast({
         variant: 'destructive',
@@ -284,31 +347,44 @@ export const useHandoff = () => {
     }
 
     setIsProcessing(true);
+    setAssignedAgent(null);
 
     try {
-      // Generate AI summary
-      const aiSummary = generateAISummary(context);
+      // Generate AI summary with form data
+      const aiSummary = generateAISummary(context, formData);
       
-      // Find matching agent
-      const agentId = await findMatchingAgent({
+      // Find matching agent with enhanced criteria
+      const agent = await findMatchingAgent({
         location: context.propertyLocation,
+        propertyType: context.propertyType,
+        area: context.propertyArea,
       });
 
-      // Create lead
+      setAssignedAgent(agent);
+
+      // Build notes with shortlist info
+      const shortlistInfo = context.shortlistIds && context.shortlistIds.length > 0
+        ? `**Shortlisted Property IDs:** ${context.shortlistIds.join(', ')}`
+        : '';
+
+      // Create lead with all required fields
       const leadData = {
         user_id: user.id,
-        lead_type: triggerReason,
+        lead_type: formData.leadType,
         status: 'new',
         priority: context.confidenceScore && context.confidenceScore < 0.5 ? 'high' : 'medium',
         property_id: context.propertyId || null,
-        agent_id: agentId,
+        agent_id: agent?.id || null,
         ai_summary: aiSummary,
         notes: `**Contact:** ${formData.name}
 **Phone:** ${formData.phone}
 **Email:** ${formData.email}
 **Preferred Time:** ${formData.preferredTime}
 **Preferred Channel:** ${formData.preferredChannel}
-${formData.message ? `**Message:** ${formData.message}` : ''}`,
+**Lead Type:** ${formData.leadType}
+**Financing Needed:** ${formData.financingNeeded ? 'Yes' : 'No'}
+${shortlistInfo}
+${formData.message ? `**Additional Notes:** ${formData.message}` : ''}`,
       };
 
       const { data: lead, error: leadError } = await supabase
@@ -319,28 +395,32 @@ ${formData.message ? `**Message:** ${formData.message}` : ''}`,
 
       if (leadError) throw leadError;
 
-      // Log audit event
+      // Log audit event with event_type=handoff_created
       await logAuditEvent(
-        'ai_handoff',
+        'handoff_created',
         'lead',
         lead.id,
         {
-          trigger_reason: triggerReason,
+          event_type: 'handoff_created',
+          lead_type: formData.leadType,
+          financing_needed: formData.financingNeeded,
+          shortlisted_property_ids: context.shortlistIds || [],
           confidence_score: context.confidenceScore,
-          ai_summary: aiSummary,
-          assigned_agent: agentId,
+          assigned_agent_id: agent?.id,
+          assigned_agent_name: agent?.name,
           property_id: context.propertyId,
+          preferred_channel: formData.preferredChannel,
         }
       );
 
       toast({
         title: 'Request Submitted!',
-        description: agentId 
-          ? 'An agent has been assigned and will contact you shortly.'
+        description: agent?.name 
+          ? `${agent.name} has been assigned and will contact you shortly.`
           : 'Your request has been submitted. An agent will be assigned soon.',
       });
 
-      return { success: true, leadId: lead.id };
+      return { success: true, leadId: lead.id, agent };
     } catch (error) {
       console.error('Handoff error:', error);
       toast({
@@ -360,5 +440,6 @@ ${formData.message ? `**Message:** ${formData.message}` : ''}`,
     initiateHandoff,
     generateAISummary,
     isProcessing,
+    assignedAgent,
   };
 };
