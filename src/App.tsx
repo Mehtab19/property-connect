@@ -18,6 +18,7 @@ import Onboarding from "./pages/Onboarding";
 import Properties from "./pages/Properties";
 import Chat from "./pages/Chat";
 import Handoff from "./pages/Handoff";
+import SubmitListing from "./pages/SubmitListing";
 
 // Dashboards
 import BuyerDashboard from "./pages/dashboards/BuyerDashboard";
@@ -56,6 +57,16 @@ const App = () => (
             <Route path="/properties" element={<Properties />} />
             <Route path="/chat" element={<Chat />} />
             <Route path="/handoff" element={<Handoff />} />
+            <Route
+              path="/submit-listing"
+              element={
+                <ProtectedRoute allowedRoles={['developer', 'broker', 'admin']}>
+                  <SubmitListing />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Buyer Dashboard Routes */}
 
             {/* Buyer Dashboard Routes */}
             <Route
