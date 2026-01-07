@@ -1,6 +1,6 @@
 /**
  * Buyer Dashboard
- * Dashboard for individual buyers to manage saved properties and meeting requests
+ * Dashboard for individual buyers to manage saved properties, analyses, leads, and conversations
  */
 
 import { useEffect, useState } from 'react';
@@ -8,9 +8,10 @@ import { Link } from 'react-router-dom';
 import DashboardLayout, { buyerNavItems } from '@/components/dashboard/DashboardLayout';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { Heart, Calendar, Eye, Trash2 } from 'lucide-react';
+import { Heart, Calendar, Eye, Trash2, MessageSquare, BarChart3, FileText, Plus } from 'lucide-react';
 import { toast } from 'sonner';
-import { getPropertyById, Property } from '@/data/propertyData';
+import { getPropertyById } from '@/data/propertyData';
+import { Button } from '@/components/ui/button';
 
 interface SavedProperty {
   id: string;
@@ -29,10 +30,37 @@ interface MeetingRequest {
   created_at: string;
 }
 
+interface PropertyAnalysis {
+  id: string;
+  property_id: string;
+  roi_estimate: number | null;
+  risk_score: number | null;
+  ai_summary: string | null;
+  created_at: string;
+}
+
+interface Lead {
+  id: string;
+  lead_type: string;
+  status: string;
+  created_at: string;
+  priority: string | null;
+}
+
+interface Conversation {
+  id: string;
+  title: string | null;
+  property_id: string | null;
+  updated_at: string;
+}
+
 const BuyerDashboard = () => {
   const { user } = useAuth();
   const [savedProperties, setSavedProperties] = useState<SavedProperty[]>([]);
   const [meetingRequests, setMeetingRequests] = useState<MeetingRequest[]>([]);
+  const [recentAnalyses, setRecentAnalyses] = useState<PropertyAnalysis[]>([]);
+  const [activeLeads, setActiveLeads] = useState<Lead[]>([]);
+  const [recentConversations, setRecentConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -43,25 +71,53 @@ const BuyerDashboard = () => {
 
   const fetchDashboardData = async () => {
     try {
-      // Fetch saved properties
-      const { data: saved, error: savedError } = await supabase
-        .from('saved_properties')
-        .select('*')
-        .eq('user_id', user?.id)
-        .order('created_at', { ascending: false });
+      // Fetch all data in parallel
+      const [savedRes, meetingsRes, analysesRes, leadsRes, conversationsRes] = await Promise.all([
+        supabase
+          .from('saved_properties')
+          .select('*')
+          .eq('user_id', user?.id)
+          .order('created_at', { ascending: false })
+          .limit(10),
+        supabase
+          .from('meeting_requests')
+          .select('*')
+          .eq('user_id', user?.id)
+          .order('created_at', { ascending: false })
+          .limit(5),
+        supabase
+          .from('property_analyses')
+          .select('*')
+          .eq('user_id', user?.id)
+          .order('created_at', { ascending: false })
+          .limit(5),
+        supabase
+          .from('leads')
+          .select('*')
+          .eq('user_id', user?.id)
+          .in('lead_type', ['viewing', 'mortgage'])
+          .neq('status', 'closed')
+          .order('created_at', { ascending: false })
+          .limit(5),
+        supabase
+          .from('conversations')
+          .select('*')
+          .eq('user_id', user?.id)
+          .order('updated_at', { ascending: false })
+          .limit(5),
+      ]);
 
-      if (savedError) throw savedError;
-      setSavedProperties(saved || []);
+      if (savedRes.error) throw savedRes.error;
+      if (meetingsRes.error) throw meetingsRes.error;
+      if (analysesRes.error) throw analysesRes.error;
+      if (leadsRes.error) throw leadsRes.error;
+      if (conversationsRes.error) throw conversationsRes.error;
 
-      // Fetch meeting requests
-      const { data: meetings, error: meetingsError } = await supabase
-        .from('meeting_requests')
-        .select('*')
-        .eq('user_id', user?.id)
-        .order('created_at', { ascending: false });
-
-      if (meetingsError) throw meetingsError;
-      setMeetingRequests(meetings || []);
+      setSavedProperties(savedRes.data || []);
+      setMeetingRequests(meetingsRes.data || []);
+      setRecentAnalyses(analysesRes.data || []);
+      setActiveLeads(leadsRes.data || []);
+      setRecentConversations(conversationsRes.data || []);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
       toast.error('Failed to load dashboard data');
@@ -90,11 +146,26 @@ const BuyerDashboard = () => {
       case 'confirmed':
         return 'bg-green-100 text-green-700';
       case 'pending':
+      case 'new':
         return 'bg-yellow-100 text-yellow-700';
       case 'cancelled':
+      case 'closed':
         return 'bg-red-100 text-red-700';
+      case 'in_progress':
+        return 'bg-blue-100 text-blue-700';
       default:
         return 'bg-muted text-muted-foreground';
+    }
+  };
+
+  const getLeadTypeLabel = (type: string) => {
+    switch (type) {
+      case 'viewing':
+        return 'Property Viewing';
+      case 'mortgage':
+        return 'Mortgage Inquiry';
+      default:
+        return type;
     }
   };
 
@@ -110,8 +181,18 @@ const BuyerDashboard = () => {
 
   return (
     <DashboardLayout title="Buyer Dashboard" navItems={buyerNavItems}>
+      {/* Start New Chat Button */}
+      <div className="mb-6">
+        <Link to="/chat">
+          <Button className="gap-2">
+            <Plus className="w-4 h-4" />
+            Start New Chat
+          </Button>
+        </Link>
+      </div>
+
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         <div className="bg-card rounded-xl p-6 border border-border">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
@@ -127,11 +208,11 @@ const BuyerDashboard = () => {
         <div className="bg-card rounded-xl p-6 border border-border">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center">
-              <Calendar className="w-6 h-6 text-secondary" />
+              <BarChart3 className="w-6 h-6 text-secondary" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-foreground">{meetingRequests.length}</p>
-              <p className="text-sm text-muted-foreground">Meeting Requests</p>
+              <p className="text-2xl font-bold text-foreground">{recentAnalyses.length}</p>
+              <p className="text-sm text-muted-foreground">Recent Analyses</p>
             </div>
           </div>
         </div>
@@ -139,13 +220,23 @@ const BuyerDashboard = () => {
         <div className="bg-card rounded-xl p-6 border border-border">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center">
-              <Eye className="w-6 h-6 text-accent" />
+              <FileText className="w-6 h-6 text-accent" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-foreground">
-                {meetingRequests.filter((m) => m.status === 'confirmed').length}
-              </p>
-              <p className="text-sm text-muted-foreground">Confirmed Visits</p>
+              <p className="text-2xl font-bold text-foreground">{activeLeads.length}</p>
+              <p className="text-sm text-muted-foreground">Active Leads</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-card rounded-xl p-6 border border-border">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center">
+              <MessageSquare className="w-6 h-6 text-green-600" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-foreground">{recentConversations.length}</p>
+              <p className="text-sm text-muted-foreground">Conversations</p>
             </div>
           </div>
         </div>
@@ -162,7 +253,7 @@ const BuyerDashboard = () => {
               <div className="text-center py-8">
                 <Heart className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                 <p className="text-muted-foreground">No saved properties yet</p>
-                <Link to="/#properties" className="text-primary font-semibold mt-2 inline-block">
+                <Link to="/properties" className="text-primary font-semibold mt-2 inline-block">
                   Browse Properties →
                 </Link>
               </div>
@@ -205,40 +296,123 @@ const BuyerDashboard = () => {
           </div>
         </div>
 
-        {/* Meeting Requests */}
+        {/* Recent Analyses */}
         <div className="bg-card rounded-xl border border-border">
           <div className="p-6 border-b border-border">
-            <h2 className="text-lg font-bold text-foreground">Meeting Requests</h2>
+            <h2 className="text-lg font-bold text-foreground">Recent Analyses</h2>
           </div>
           <div className="p-6">
-            {meetingRequests.length === 0 ? (
+            {recentAnalyses.length === 0 ? (
               <div className="text-center py-8">
-                <Calendar className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">No meeting requests yet</p>
-                <Link to="/schedule" className="text-primary font-semibold mt-2 inline-block">
-                  Schedule a Meeting →
+                <BarChart3 className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground">No property analyses yet</p>
+                <Link to="/properties" className="text-primary font-semibold mt-2 inline-block">
+                  Analyze a Property →
                 </Link>
               </div>
             ) : (
               <div className="space-y-4">
-                {meetingRequests.slice(0, 5).map((meeting) => (
+                {recentAnalyses.map((analysis) => {
+                  const property = getPropertyById(analysis.property_id);
+                  return (
+                    <div
+                      key={analysis.id}
+                      className="p-4 rounded-lg bg-muted/50"
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="font-semibold text-foreground">
+                          {property?.title || `Property #${analysis.property_id}`}
+                        </p>
+                        {analysis.roi_estimate && (
+                          <span className="text-sm text-green-600 font-semibold">
+                            ROI: {analysis.roi_estimate}%
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-sm text-muted-foreground line-clamp-2">
+                        {analysis.ai_summary || 'Analysis completed'}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        {new Date(analysis.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Active Leads */}
+        <div className="bg-card rounded-xl border border-border">
+          <div className="p-6 border-b border-border">
+            <h2 className="text-lg font-bold text-foreground">Active Leads</h2>
+          </div>
+          <div className="p-6">
+            {activeLeads.length === 0 ? (
+              <div className="text-center py-8">
+                <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground">No active leads</p>
+                <Link to="/handoff" className="text-primary font-semibold mt-2 inline-block">
+                  Request Agent Help →
+                </Link>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {activeLeads.map((lead) => (
                   <div
-                    key={meeting.id}
+                    key={lead.id}
                     className="p-4 rounded-lg bg-muted/50"
                   >
                     <div className="flex items-center justify-between mb-2">
-                      <p className="font-semibold text-foreground">{meeting.property_title}</p>
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(meeting.status)}`}>
-                        {meeting.status}
+                      <p className="font-semibold text-foreground">{getLeadTypeLabel(lead.lead_type)}</p>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(lead.status)}`}>
+                        {lead.status}
                       </span>
                     </div>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <span>{new Date(meeting.preferred_date).toLocaleDateString()}</span>
-                      <span>{meeting.preferred_time}</span>
-                      <span className="capitalize">{meeting.meeting_type}</span>
-                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Created: {new Date(lead.created_at).toLocaleDateString()}
+                    </p>
                   </div>
                 ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Recent Conversations */}
+        <div className="bg-card rounded-xl border border-border">
+          <div className="p-6 border-b border-border">
+            <h2 className="text-lg font-bold text-foreground">Recent Conversations</h2>
+          </div>
+          <div className="p-6">
+            {recentConversations.length === 0 ? (
+              <div className="text-center py-8">
+                <MessageSquare className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground">No conversations yet</p>
+                <Link to="/chat" className="text-primary font-semibold mt-2 inline-block">
+                  Start a Chat →
+                </Link>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {recentConversations.map((conv) => {
+                  const property = conv.property_id ? getPropertyById(conv.property_id) : null;
+                  return (
+                    <Link
+                      key={conv.id}
+                      to={`/chat?conversation=${conv.id}`}
+                      className="block p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
+                    >
+                      <p className="font-semibold text-foreground">
+                        {conv.title || (property ? `About: ${property.title}` : 'General Chat')}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Last updated: {new Date(conv.updated_at).toLocaleDateString()}
+                      </p>
+                    </Link>
+                  );
+                })}
               </div>
             )}
           </div>
