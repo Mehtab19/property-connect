@@ -38,6 +38,10 @@ import PlatformAnalytics from "./pages/admin/PlatformAnalytics";
 import MeetingRequests from "./pages/admin/MeetingRequests";
 import AdminSettings from "./pages/admin/AdminSettings";
 import LeadManagement from "./pages/admin/LeadManagement";
+import AgentManagement from "./pages/admin/AgentManagement";
+import PartnerManagement from "./pages/admin/PartnerManagement";
+import AuditLog from "./pages/admin/AuditLog";
+import Admin from "./pages/Admin";
 
 const queryClient = new QueryClient();
 
@@ -95,6 +99,16 @@ const App = () => (
               element={
                 <ProtectedRoute allowedRoles={['broker', 'admin']}>
                   <Agent />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Admin shortcut route */}
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <Admin />
                 </ProtectedRoute>
               }
             />
@@ -205,6 +219,30 @@ const App = () => (
               element={
                 <ProtectedRoute allowedRoles={['admin', 'broker']}>
                   <LeadManagement />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/dashboard/agents"
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <AgentManagement />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/dashboard/partners"
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <PartnerManagement />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/dashboard/ai-audit"
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <AuditLog />
                 </ProtectedRoute>
               }
             />
