@@ -21,6 +21,7 @@ import Handoff from "./pages/Handoff";
 import SubmitListing from "./pages/SubmitListing";
 import Dashboard from "./pages/Dashboard";
 import Developer from "./pages/Developer";
+import Agent from "./pages/Agent";
 
 // Dashboards
 import BuyerDashboard from "./pages/dashboards/BuyerDashboard";
@@ -84,6 +85,16 @@ const App = () => (
               element={
                 <ProtectedRoute allowedRoles={['developer', 'admin']}>
                   <Developer />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Agent shortcut route */}
+            <Route
+              path="/agent"
+              element={
+                <ProtectedRoute allowedRoles={['broker', 'admin']}>
+                  <Agent />
                 </ProtectedRoute>
               }
             />
