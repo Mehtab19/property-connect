@@ -11,7 +11,8 @@ import {
   CheckCircle,
   Sparkles,
   MessageSquare,
-  Home
+  Home,
+  Star
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -22,7 +23,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import HandoffForm from '@/components/HandoffForm';
 import { useAuth } from '@/hooks/useAuth';
-import { useHandoff, HandoffContext } from '@/hooks/useHandoff';
+import { useHandoff, HandoffContext, AssignedAgent } from '@/hooks/useHandoff';
 import { supabase } from '@/integrations/supabase/client';
 
 interface PropertyInfo {
@@ -64,6 +65,7 @@ const Handoff = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [leadCreated, setLeadCreated] = useState(false);
   const [createdLeadId, setCreatedLeadId] = useState<string | null>(null);
+  const [assignedAgent, setAssignedAgent] = useState<AssignedAgent | null>(null);
   
   const propertyId = searchParams.get('propertyId');
   const conversationId = searchParams.get('conversationId');
@@ -307,6 +309,9 @@ const Handoff = () => {
       propertyId: property?.id,
       propertyTitle: property?.title,
       propertyLocation: property ? `${property.area}, ${property.city}` : undefined,
+      propertyType: property?.property_type,
+      propertyArea: property?.area,
+      shortlistIds: shortlist.map(p => p.id),
     };
   };
 
@@ -337,9 +342,10 @@ const Handoff = () => {
     return parts.join('\n\n');
   };
 
-  const handleSuccess = (leadId: string) => {
+  const handleSuccess = (leadId: string, agent?: AssignedAgent) => {
     setLeadCreated(true);
     setCreatedLeadId(leadId);
+    setAssignedAgent(agent || null);
   };
 
   if (leadCreated) {
@@ -353,8 +359,36 @@ const Handoff = () => {
                 <CheckCircle className="h-10 w-10 text-green-600 dark:text-green-400" />
               </div>
               <h2 className="text-2xl font-bold text-foreground mb-3">Request Submitted Successfully!</h2>
+              
+              {/* Assigned Agent Info */}
+              {assignedAgent && (
+                <div className="bg-muted/50 rounded-lg p-4 mb-6 mx-auto max-w-sm">
+                  <p className="text-sm text-muted-foreground mb-3">Your assigned agent:</p>
+                  <div className="flex items-center justify-center gap-4">
+                    <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
+                      <UserCheck className="h-7 w-7 text-primary" />
+                    </div>
+                    <div className="text-left">
+                      <p className="font-semibold text-lg">{assignedAgent.name || 'Property Expert'}</p>
+                      {assignedAgent.agencyName && (
+                        <p className="text-sm text-muted-foreground">{assignedAgent.agencyName}</p>
+                      )}
+                      {assignedAgent.rating && (
+                        <div className="flex items-center gap-1 text-sm">
+                          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                          <span className="font-medium">{assignedAgent.rating.toFixed(1)}</span>
+                          <span className="text-muted-foreground">rating</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+              
               <p className="text-muted-foreground mb-2">
-                Your request has been assigned to a verified agent who specializes in your area of interest.
+                {assignedAgent?.name 
+                  ? `${assignedAgent.name} will contact you within 24 hours via your preferred channel.`
+                  : 'Your request has been assigned to a verified agent who specializes in your area of interest.'}
               </p>
               <p className="text-sm text-muted-foreground mb-6">
                 Reference: <span className="font-mono font-medium">{createdLeadId?.slice(0, 8)}</span>
@@ -365,7 +399,7 @@ const Handoff = () => {
                 <ul className="text-sm text-muted-foreground space-y-2">
                   <li className="flex items-start gap-2">
                     <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                    <span>An agent will contact you within 24 hours via your preferred channel</span>
+                    <span>{assignedAgent?.name || 'An agent'} will contact you within 24 hours via your preferred channel</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
