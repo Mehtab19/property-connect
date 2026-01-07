@@ -20,6 +20,7 @@ import Chat from "./pages/Chat";
 import Handoff from "./pages/Handoff";
 import SubmitListing from "./pages/SubmitListing";
 import Dashboard from "./pages/Dashboard";
+import Developer from "./pages/Developer";
 
 // Dashboards
 import BuyerDashboard from "./pages/dashboards/BuyerDashboard";
@@ -73,6 +74,16 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Developer shortcut route */}
+            <Route
+              path="/developer"
+              element={
+                <ProtectedRoute allowedRoles={['developer', 'admin']}>
+                  <Developer />
                 </ProtectedRoute>
               }
             />
