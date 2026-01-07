@@ -119,6 +119,8 @@ interface PreApprovalFormData {
   employmentType: string;
   propertyType: string;
   loanAmount: string;
+  downPayment: string;
+  preferredBank: string;
   message: string;
 }
 
@@ -159,6 +161,8 @@ const MortgageHub = () => {
     employmentType: '',
     propertyType: '',
     loanAmount: '',
+    downPayment: '',
+    preferredBank: '',
     message: '',
   });
 
@@ -237,17 +241,22 @@ const MortgageHub = () => {
 
     try {
       // Create lead with detailed information
-      const { error } = await supabase.from('leads').insert({
+      const { error } = await supabase.from('leads').insert([{
         user_id: user.id,
         mortgage_partner_id: selectedPartner.id,
-        lead_type: 'mortgage_preapproval',
+        lead_type: 'mortgage',
         priority: 'high',
         ai_summary: `**Pre-Approval Request**
 Partner: ${selectedPartner.bank_name}
-Requested Amount: ${formatCurrency(parseInt(formData.loanAmount))}
+Requested Amount: ${formatCurrency(parseInt(formData.loanAmount) || 0)}
+Down Payment: ${formatCurrency(parseInt(formData.downPayment) || 0)}
 Monthly Income: PKR ${formData.monthlyIncome}
 Employment: ${formData.employmentType}
-Property Type: ${formData.propertyType}`,
+Property Type: ${formData.propertyType}
+
+**User Intent:** Seeking mortgage pre-approval for property purchase.
+**Financing Needs:** Requires loan of ${formatCurrency(parseInt(formData.loanAmount) || 0)} with ${formatCurrency(parseInt(formData.downPayment) || 0)} down payment.
+**Next Steps:** Partner to verify income documents and provide rate quote.`,
         notes: `**Contact Details:**
 Name: ${formData.fullName}
 Email: ${formData.email}
@@ -257,11 +266,13 @@ Phone: ${formData.phone}
 Monthly Income: PKR ${formData.monthlyIncome}
 Employment Type: ${formData.employmentType}
 Property Type: ${formData.propertyType}
-Requested Loan: ${formatCurrency(parseInt(formData.loanAmount))}
+Requested Loan: ${formatCurrency(parseInt(formData.loanAmount) || 0)}
+Down Payment: ${formatCurrency(parseInt(formData.downPayment) || 0)}
+Preferred Bank: ${formData.preferredBank || selectedPartner.bank_name}
 
 **Additional Message:**
 ${formData.message || 'N/A'}`,
-      });
+      }]);
 
       if (error) throw error;
 
@@ -291,6 +302,8 @@ ${formData.message || 'N/A'}`,
         employmentType: '',
         propertyType: '',
         loanAmount: '',
+        downPayment: '',
+        preferredBank: '',
         message: '',
       });
     } catch (error) {
@@ -799,6 +812,19 @@ ${formData.message || 'N/A'}`,
                   required
                 />
               </div>
+            </div>
+
+            {/* Down Payment */}
+            <div className="space-y-2">
+              <Label htmlFor="downPayment">Down Payment Available (PKR) *</Label>
+              <Input
+                id="downPayment"
+                type="number"
+                placeholder="e.g., 2000000"
+                value={formData.downPayment}
+                onChange={(e) => setFormData({ ...formData, downPayment: e.target.value })}
+                required
+              />
             </div>
 
             <div className="space-y-2">
