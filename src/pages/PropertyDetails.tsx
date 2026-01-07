@@ -24,6 +24,7 @@ import { DecisionBriefData, UserGoal, RiskLevel, Verdict } from '@/components/pr
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import FavoriteButton from '@/components/FavoriteButton';
 
 const PropertyDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -238,11 +239,18 @@ const PropertyDetails = () => {
             <ArrowLeft className="w-5 h-5" />
             Back to Properties
           </button>
-          <div className="flex flex-wrap items-center gap-3 mb-2">
-            <h1 className="text-3xl md:text-4xl font-extrabold">{property.name}</h1>
-            <Badge variant={isOffPlan ? "secondary" : "default"} className="text-sm">
-              {isOffPlan ? 'Off-Plan' : 'Ready'}
-            </Badge>
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
+            <div className="flex flex-wrap items-center gap-3">
+              <h1 className="text-3xl md:text-4xl font-extrabold">{property.name}</h1>
+              <Badge variant={isOffPlan ? "secondary" : "default"} className="text-sm">
+                {isOffPlan ? 'Off-Plan' : 'Ready'}
+              </Badge>
+            </div>
+            <FavoriteButton 
+              propertyId={property.id} 
+              variant="button"
+              className="bg-white/20 border-white/30 text-white hover:bg-white/30"
+            />
           </div>
           <div className="flex items-center gap-2 text-lg opacity-90">
             <MapPin className="w-5 h-5" />

@@ -6,6 +6,7 @@
 import { MapPin } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Property } from '@/data/propertyData';
+import FavoriteButton from '@/components/FavoriteButton';
 
 interface PropertyCardProps {
   property: Property;
@@ -48,6 +49,13 @@ const PropertyCard = ({ property }: PropertyCardProps) => {
           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
           loading="lazy"
         />
+        {/* Favorite Button */}
+        <div className="absolute top-3 right-3">
+          <FavoriteButton 
+            propertyId={property.id} 
+            className="bg-background/80 backdrop-blur-sm hover:bg-background"
+          />
+        </div>
       </div>
 
       {/* Content */}

@@ -7,7 +7,8 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
   Search, Filter, Grid3X3, List, MapPin, Bed, Bath, Square,
-  ChevronDown, X, Scale, Bot, Eye, Building2, SlidersHorizontal
+  ChevronDown, X, Scale, Bot, Eye, Building2, SlidersHorizontal,
+  Heart, Bookmark, Trash2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,10 +19,14 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { toast } from 'sonner';
+import FavoriteButton from '@/components/FavoriteButton';
+import { useSavedSearches } from '@/hooks/useSavedSearches';
+import { useAuth } from '@/hooks/useAuth';
 
 interface Property {
   id: string;
@@ -55,11 +60,16 @@ interface Filters {
 
 const Properties = () => {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
+  const { savedSearches, saveSearch, deleteSearch } = useSavedSearches();
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [compareList, setCompareList] = useState<Property[]>([]);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [saveSearchOpen, setSaveSearchOpen] = useState(false);
+  const [savedSearchesOpen, setSavedSearchesOpen] = useState(false);
+  const [searchName, setSearchName] = useState('');
   
   const [filters, setFilters] = useState<Filters>({
     search: '',
@@ -188,6 +198,22 @@ const Properties = () => {
       purpose: 'any',
       sortBy: 'newest',
     });
+  };
+
+  const handleSaveSearch = async () => {
+    if (!searchName.trim()) {
+      toast.error('Please enter a name for this search');
+      return;
+    }
+    await saveSearch(searchName, filters);
+    setSearchName('');
+    setSaveSearchOpen(false);
+  };
+
+  const applySearch = (savedFilters: Record<string, any>) => {
+    setFilters(savedFilters as Filters);
+    setSavedSearchesOpen(false);
+    toast.success('Search filters applied');
   };
 
   const propertyTypes = [
@@ -330,6 +356,41 @@ const Properties = () => {
       <Button variant="outline" onClick={clearFilters} className="w-full">
         Clear All Filters
       </Button>
+
+      {/* Save Search */}
+      {isAuthenticated && (
+        <Dialog open={saveSearchOpen} onOpenChange={setSaveSearchOpen}>
+          <DialogTrigger asChild>
+            <Button variant="secondary" className="w-full gap-2">
+              <Bookmark className="w-4 h-4" />
+              Save This Search
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Save Search</DialogTitle>
+            </DialogHeader>
+            <div className="py-4">
+              <Label htmlFor="search-name">Search Name</Label>
+              <Input
+                id="search-name"
+                value={searchName}
+                onChange={(e) => setSearchName(e.target.value)}
+                placeholder="e.g., 3BR in Downtown"
+                className="mt-2"
+              />
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setSaveSearchOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleSaveSearch}>
+                Save Search
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 
@@ -348,6 +409,46 @@ const Properties = () => {
           </div>
           
           <div className="flex items-center gap-3">
+            {/* Saved Searches */}
+            {isAuthenticated && savedSearches.length > 0 && (
+              <Dialog open={savedSearchesOpen} onOpenChange={setSavedSearchesOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" className="gap-2">
+                    <Bookmark className="w-4 h-4" />
+                    <span className="hidden sm:inline">Saved ({savedSearches.length})</span>
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Saved Searches</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-2 max-h-64 overflow-y-auto py-2">
+                    {savedSearches.map((search) => (
+                      <div
+                        key={search.id}
+                        className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
+                      >
+                        <button
+                          onClick={() => applySearch(search.filters)}
+                          className="flex-1 text-left font-medium"
+                        >
+                          {search.name}
+                        </button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8"
+                          onClick={() => deleteSearch(search.id)}
+                        >
+                          <Trash2 className="w-4 h-4 text-destructive" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </DialogContent>
+              </Dialog>
+            )}
+
             {/* Sort */}
             <Select
               value={filters.sortBy}
@@ -608,6 +709,7 @@ const PropertyCard = ({
             <Button size="sm" variant="outline" onClick={onAskPropertyX}>
               <Bot className="w-4 h-4 mr-1" /> Ask PropertyX
             </Button>
+            <FavoriteButton propertyId={property.id} size="sm" />
           </div>
         </div>
       </div>
@@ -630,14 +732,21 @@ const PropertyCard = ({
             Ready
           </Badge>
         </div>
-        <Button
-          size="icon"
-          variant={isComparing ? 'secondary' : 'outline'}
-          className="absolute top-3 right-3 h-8 w-8 bg-white/90 hover:bg-white"
-          onClick={onToggleCompare}
-        >
-          <Scale className={`w-4 h-4 ${isComparing ? 'text-primary' : ''}`} />
-        </Button>
+        <div className="absolute top-3 right-3 flex gap-2">
+          <FavoriteButton 
+            propertyId={property.id} 
+            size="sm"
+            className="h-8 w-8 bg-white/90 hover:bg-white"
+          />
+          <Button
+            size="icon"
+            variant={isComparing ? 'secondary' : 'outline'}
+            className="h-8 w-8 bg-white/90 hover:bg-white"
+            onClick={onToggleCompare}
+          >
+            <Scale className={`w-4 h-4 ${isComparing ? 'text-primary' : ''}`} />
+          </Button>
+        </div>
       </div>
       
       <div className="p-5">
