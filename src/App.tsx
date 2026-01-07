@@ -19,6 +19,7 @@ import Properties from "./pages/Properties";
 import Chat from "./pages/Chat";
 import Handoff from "./pages/Handoff";
 import SubmitListing from "./pages/SubmitListing";
+import Dashboard from "./pages/Dashboard";
 
 // Dashboards
 import BuyerDashboard from "./pages/dashboards/BuyerDashboard";
@@ -62,6 +63,16 @@ const App = () => (
               element={
                 <ProtectedRoute allowedRoles={['developer', 'broker', 'admin']}>
                   <SubmitListing />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Unified Dashboard Route - redirects based on role */}
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
                 </ProtectedRoute>
               }
             />
