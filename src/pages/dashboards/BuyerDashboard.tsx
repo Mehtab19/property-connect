@@ -4,20 +4,17 @@
  */
 
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import DashboardLayout, { buyerNavItems } from '@/components/dashboard/DashboardLayout';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { Heart, Calendar, Eye, Trash2, MessageSquare, BarChart3, FileText, Plus } from 'lucide-react';
+import { useFavorites } from '@/hooks/useFavorites';
+import { useSavedSearches } from '@/hooks/useSavedSearches';
+import { Heart, Calendar, Eye, Trash2, MessageSquare, BarChart3, FileText, Plus, Bookmark, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { getPropertyById } from '@/data/propertyData';
 import { Button } from '@/components/ui/button';
 
-interface SavedProperty {
-  id: string;
-  property_id: string;
-  created_at: string;
-}
 
 interface MeetingRequest {
   id: string;
@@ -56,7 +53,9 @@ interface Conversation {
 
 const BuyerDashboard = () => {
   const { user } = useAuth();
-  const [savedProperties, setSavedProperties] = useState<SavedProperty[]>([]);
+  const navigate = useNavigate();
+  const { favorites, removeFavorite, loading: favoritesLoading } = useFavorites();
+  const { savedSearches, deleteSearch, loading: searchesLoading } = useSavedSearches();
   const [meetingRequests, setMeetingRequests] = useState<MeetingRequest[]>([]);
   const [recentAnalyses, setRecentAnalyses] = useState<PropertyAnalysis[]>([]);
   const [activeLeads, setActiveLeads] = useState<Lead[]>([]);
@@ -71,14 +70,8 @@ const BuyerDashboard = () => {
 
   const fetchDashboardData = async () => {
     try {
-      // Fetch all data in parallel
-      const [savedRes, meetingsRes, analysesRes, leadsRes, conversationsRes] = await Promise.all([
-        supabase
-          .from('saved_properties')
-          .select('*')
-          .eq('user_id', user?.id)
-          .order('created_at', { ascending: false })
-          .limit(10),
+      // Fetch all data in parallel (favorites and saved searches are handled by hooks)
+      const [meetingsRes, analysesRes, leadsRes, conversationsRes] = await Promise.all([
         supabase
           .from('meeting_requests')
           .select('*')
@@ -107,13 +100,11 @@ const BuyerDashboard = () => {
           .limit(5),
       ]);
 
-      if (savedRes.error) throw savedRes.error;
       if (meetingsRes.error) throw meetingsRes.error;
       if (analysesRes.error) throw analysesRes.error;
       if (leadsRes.error) throw leadsRes.error;
       if (conversationsRes.error) throw conversationsRes.error;
 
-      setSavedProperties(savedRes.data || []);
       setMeetingRequests(meetingsRes.data || []);
       setRecentAnalyses(analysesRes.data || []);
       setActiveLeads(leadsRes.data || []);
@@ -126,19 +117,11 @@ const BuyerDashboard = () => {
     }
   };
 
-  const removeSavedProperty = async (id: string) => {
-    try {
-      const { error } = await supabase
-        .from('saved_properties')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-      setSavedProperties(savedProperties.filter((p) => p.id !== id));
-      toast.success('Property removed from favorites');
-    } catch (error) {
-      toast.error('Failed to remove property');
-    }
+  const handleApplySearch = (filters: Record<string, any>) => {
+    // Store filters in localStorage and navigate to properties
+    localStorage.setItem('property_filters', JSON.stringify(filters));
+    navigate('/properties');
+    toast.success('Search filters applied');
   };
 
   const getStatusColor = (status: string) => {
@@ -199,7 +182,7 @@ const BuyerDashboard = () => {
               <Heart className="w-6 h-6 text-primary" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-foreground">{savedProperties.length}</p>
+              <p className="text-2xl font-bold text-foreground">{favorites.length}</p>
               <p className="text-sm text-muted-foreground">Saved Properties</p>
             </div>
           </div>
@@ -249,7 +232,7 @@ const BuyerDashboard = () => {
             <h2 className="text-lg font-bold text-foreground">Saved Properties</h2>
           </div>
           <div className="p-6">
-            {savedProperties.length === 0 ? (
+            {favorites.length === 0 ? (
               <div className="text-center py-8">
                 <Heart className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                 <p className="text-muted-foreground">No saved properties yet</p>
@@ -259,7 +242,7 @@ const BuyerDashboard = () => {
               </div>
             ) : (
               <div className="space-y-4">
-                {savedProperties.slice(0, 5).map((saved) => {
+                {favorites.slice(0, 5).map((saved) => {
                   const property = getPropertyById(saved.property_id);
                   return (
                     <div
@@ -282,7 +265,7 @@ const BuyerDashboard = () => {
                           <Eye className="w-4 h-4 text-primary" />
                         </Link>
                         <button
-                          onClick={() => removeSavedProperty(saved.id)}
+                          onClick={() => removeFavorite(saved.id)}
                           className="p-2 rounded-lg hover:bg-muted transition-colors"
                         >
                           <Trash2 className="w-4 h-4 text-destructive" />
