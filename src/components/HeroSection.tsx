@@ -123,8 +123,9 @@ const HeroSection = () => {
           onLoadedData={() => setVideoLoaded(true)}
           poster="https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=1920&q=80"
         >
+          {/* Dubai skyline video - using a reliable CDN source */}
           <source 
-            src="https://videos.pexels.com/video-files/3629519/3629519-uhd_2560_1440_24fps.mp4" 
+            src="https://cdn.pixabay.com/video/2020/05/25/40130-424930942_large.mp4" 
             type="video/mp4" 
           />
         </video>
