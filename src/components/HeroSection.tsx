@@ -1,12 +1,25 @@
 /**
  * Hero Section Component
- * Main hero banner for the homepage
+ * Enhanced hero banner with background video for the homepage
  */
 
-import { Bot, Building2, Sparkles } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { useState, useRef, useEffect } from 'react';
+import { Bot, Building2, Sparkles, Search, ChevronDown } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const HeroSection = () => {
+  const navigate = useNavigate();
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [videoLoaded, setVideoLoaded] = useState(false);
+  const [videoPaused, setVideoPaused] = useState(false);
+  
+  // Search state
+  const [propertyType, setPropertyType] = useState('buy');
+  const [budget, setBudget] = useState('');
+  const [area, setArea] = useState('');
+
   const stats = [
     { value: '$2.5B+', label: 'Property Value Analyzed' },
     { value: '200+', label: 'Verified Partners' },
@@ -14,18 +27,112 @@ const HeroSection = () => {
     { value: '98%', label: 'Client Satisfaction' },
   ];
 
+  const dubaiAreas = [
+    'Downtown Dubai',
+    'Dubai Marina',
+    'Palm Jumeirah',
+    'Business Bay',
+    'JVC',
+    'Dubai Hills',
+    'Arabian Ranches',
+    'JBR',
+    'Al Barsha',
+    'Deira',
+  ];
+
+  const budgetRanges = [
+    { value: '0-500000', label: 'Up to AED 500K' },
+    { value: '500000-1000000', label: 'AED 500K - 1M' },
+    { value: '1000000-2000000', label: 'AED 1M - 2M' },
+    { value: '2000000-5000000', label: 'AED 2M - 5M' },
+    { value: '5000000-10000000', label: 'AED 5M - 10M' },
+    { value: '10000000+', label: 'AED 10M+' },
+  ];
+
+  // Handle reduced motion preference
+  useEffect(() => {
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    
+    const handleMotionPreference = (e: MediaQueryListEvent | MediaQueryList) => {
+      if (videoRef.current) {
+        if (e.matches) {
+          videoRef.current.pause();
+          setVideoPaused(true);
+        } else {
+          videoRef.current.play();
+          setVideoPaused(false);
+        }
+      }
+    };
+
+    handleMotionPreference(prefersReducedMotion);
+    prefersReducedMotion.addEventListener('change', handleMotionPreference);
+    
+    return () => {
+      prefersReducedMotion.removeEventListener('change', handleMotionPreference);
+    };
+  }, [videoLoaded]);
+
+  // Handle low bandwidth detection
+  useEffect(() => {
+    if ('connection' in navigator) {
+      const connection = (navigator as any).connection;
+      if (connection?.effectiveType === '2g' || connection?.saveData) {
+        setVideoPaused(true);
+        if (videoRef.current) {
+          videoRef.current.pause();
+        }
+      }
+    }
+  }, []);
+
+  const handleSearch = () => {
+    const params = new URLSearchParams();
+    if (area) params.set('location', area);
+    if (budget) params.set('budget', budget);
+    if (propertyType) params.set('purpose', propertyType);
+    navigate(`/properties${params.toString() ? `?${params.toString()}` : ''}`);
+  };
+
   return (
     <section 
       id="home" 
       className="relative min-h-[90vh] flex items-center justify-center text-white overflow-hidden"
-      style={{
-        background: `linear-gradient(135deg, rgba(26, 54, 93, 0.95) 0%, rgba(15, 118, 110, 0.9) 100%), 
-                     url('https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=1973&q=80')`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundAttachment: 'fixed'
-      }}
     >
+      {/* Video Background with Fallback */}
+      <div className="absolute inset-0">
+        {/* Fallback Image - Always loaded */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center"
+          style={{
+            backgroundImage: `url('https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=1920&q=80')`,
+          }}
+        />
+        
+        {/* Video - Lazy loaded */}
+        <video
+          ref={videoRef}
+          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${
+            videoLoaded && !videoPaused ? 'opacity-100' : 'opacity-0'
+          }`}
+          autoPlay
+          loop
+          muted
+          playsInline
+          preload="metadata"
+          onLoadedData={() => setVideoLoaded(true)}
+          poster="https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=1920&q=80"
+        >
+          <source 
+            src="https://videos.pexels.com/video-files/3629519/3629519-uhd_2560_1440_24fps.mp4" 
+            type="video/mp4" 
+          />
+        </video>
+      </div>
+
+      {/* Dark Overlay for Text Readability */}
+      <div className="absolute inset-0 bg-gradient-to-b from-primary/70 via-primary/50 to-primary/80" />
+
       {/* Decorative Pattern Overlay */}
       <div 
         className="absolute inset-0 opacity-5"
@@ -42,11 +149,79 @@ const HeroSection = () => {
         </div>
 
         <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold mb-6 leading-tight animate-slide-up">
-          PropertyX — AI-Powered Property<br className="hidden md:block" /> Buying & Investment Analyst
+          Discover Premium Properties<br className="hidden md:block" /> Across Dubai
         </h1>
         <p className="text-lg md:text-xl max-w-3xl mx-auto mb-10 opacity-90 animate-slide-up" style={{ animationDelay: '0.1s' }}>
-          Chat or speak with PropertyX to get ROI, risk, and affordability insights—then connect to a verified human agent.
+          Buy, Invest, or Develop in Dubai's Most Exclusive Locations
         </p>
+
+        {/* Search Bar */}
+        <div 
+          className="max-w-4xl mx-auto bg-white/10 backdrop-blur-md rounded-2xl p-4 md:p-6 mb-10 animate-slide-up border border-white/20"
+          style={{ animationDelay: '0.15s' }}
+        >
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {/* Property Type */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-white/80">Property Type</label>
+              <Select value={propertyType} onValueChange={setPropertyType}>
+                <SelectTrigger className="bg-white/20 border-white/30 text-white h-12">
+                  <SelectValue placeholder="Select type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="buy">Buy</SelectItem>
+                  <SelectItem value="rent">Rent</SelectItem>
+                  <SelectItem value="invest">Invest</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Budget */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-white/80">Budget</label>
+              <Select value={budget} onValueChange={setBudget}>
+                <SelectTrigger className="bg-white/20 border-white/30 text-white h-12">
+                  <SelectValue placeholder="Select budget" />
+                </SelectTrigger>
+                <SelectContent>
+                  {budgetRanges.map((range) => (
+                    <SelectItem key={range.value} value={range.value}>
+                      {range.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Dubai Area */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-white/80">Dubai Area</label>
+              <Select value={area} onValueChange={setArea}>
+                <SelectTrigger className="bg-white/20 border-white/30 text-white h-12">
+                  <SelectValue placeholder="Select area" />
+                </SelectTrigger>
+                <SelectContent>
+                  {dubaiAreas.map((areaName) => (
+                    <SelectItem key={areaName} value={areaName}>
+                      {areaName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Search Button */}
+            <div className="flex items-end">
+              <Button 
+                onClick={handleSearch}
+                className="w-full h-12 btn-accent text-lg font-semibold"
+              >
+                <Search className="w-5 h-5 mr-2" />
+                Search Properties
+              </Button>
+            </div>
+          </div>
+        </div>
 
         {/* CTA Buttons */}
         <div className="flex flex-wrap gap-4 justify-center mb-16 animate-slide-up" style={{ animationDelay: '0.2s' }}>
@@ -54,7 +229,7 @@ const HeroSection = () => {
             <Bot className="w-5 h-5" />
             Start with PropertyX
           </Link>
-          <Link to="/properties" className="btn-accent text-lg px-8 py-4">
+          <Link to="/properties" className="btn-outline border-white text-white hover:bg-white hover:text-primary text-lg px-8 py-4">
             <Building2 className="w-5 h-5" />
             Browse Properties
           </Link>
@@ -68,6 +243,11 @@ const HeroSection = () => {
               <div className="text-sm md:text-base opacity-80">{stat.label}</div>
             </div>
           ))}
+        </div>
+
+        {/* Scroll Indicator */}
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
+          <ChevronDown className="w-8 h-8 text-white/60" />
         </div>
       </div>
     </section>
