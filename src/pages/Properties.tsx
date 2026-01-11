@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { 
   Search, Filter, Grid3X3, List, MapPin, Bed, Bath, Square,
   ChevronDown, X, Scale, Bot, Eye, Building2, SlidersHorizontal,
@@ -60,6 +60,7 @@ interface Filters {
 
 const Properties = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { isAuthenticated } = useAuth();
   const { savedSearches, saveSearch, deleteSearch } = useSavedSearches();
   const [properties, setProperties] = useState<Property[]>([]);
@@ -71,17 +72,35 @@ const Properties = () => {
   const [savedSearchesOpen, setSavedSearchesOpen] = useState(false);
   const [searchName, setSearchName] = useState('');
   
+  // Initialize filters from URL params
+  const initialLocation = searchParams.get('location') || '';
+  const initialPurpose = searchParams.get('purpose') || 'any';
+  
   const [filters, setFilters] = useState<Filters>({
-    search: '',
+    search: initialLocation,
     city: '',
     propertyType: [],
     readyStatus: 'all',
     priceMin: 0,
     priceMax: 10000000,
     bedrooms: 'any',
-    purpose: 'any',
+    purpose: initialPurpose,
     sortBy: 'newest',
   });
+
+  // Update filters when URL params change
+  useEffect(() => {
+    const location = searchParams.get('location');
+    const purpose = searchParams.get('purpose');
+    
+    if (location || purpose) {
+      setFilters(f => ({
+        ...f,
+        search: location || f.search,
+        purpose: purpose || f.purpose,
+      }));
+    }
+  }, [searchParams]);
 
   // Fetch properties from database
   useEffect(() => {
