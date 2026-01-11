@@ -123,9 +123,9 @@ const HeroSection = () => {
           onLoadedData={() => setVideoLoaded(true)}
           poster="https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=1920&q=80"
         >
-          {/* Dubai skyline video - using a reliable CDN source */}
+          {/* High-quality Dubai aerial video - Burj Khalifa & Downtown Dubai */}
           <source 
-            src="https://cdn.pixabay.com/video/2020/05/25/40130-424930942_large.mp4" 
+            src="https://cdn.pixabay.com/video/2019/07/29/25641-351809652_large.mp4" 
             type="video/mp4" 
           />
         </video>
