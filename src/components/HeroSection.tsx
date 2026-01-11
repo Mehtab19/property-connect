@@ -8,6 +8,7 @@ import { Bot, Building2, Sparkles, Search, ChevronDown } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import dubaiHeroVideo from '@/assets/dubai-hero-video.mp4';
 
 const HeroSection = () => {
   const navigate = useNavigate();
@@ -119,13 +120,14 @@ const HeroSection = () => {
           loop
           muted
           playsInline
-          preload="metadata"
+          preload="auto"
+          onCanPlay={() => setVideoLoaded(true)}
           onLoadedData={() => setVideoLoaded(true)}
           poster="https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=1920&q=80"
         >
-          {/* High-quality Dubai aerial video - Burj Khalifa & Downtown Dubai */}
+          {/* Dubai cityscape video - locally hosted */}
           <source 
-            src="https://cdn.pixabay.com/video/2019/07/29/25641-351809652_large.mp4" 
+            src={dubaiHeroVideo} 
             type="video/mp4" 
           />
         </video>
