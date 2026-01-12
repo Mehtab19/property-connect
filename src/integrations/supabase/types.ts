@@ -848,15 +848,7 @@ export type Database = {
           roi_estimate?: number | null
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "property_analyses_property_id_fkey"
-            columns: ["property_id"]
-            isOneToOne: false
-            referencedRelation: "properties"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       property_comparisons: {
         Row: {
