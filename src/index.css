@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,40 +6,49 @@
 
 @layer base {
   :root {
-    --background: 222 47% 6%;
-    --foreground: 210 40% 96%;
-
-    --card: 222 40% 10%;
-    --card-foreground: 210 40% 96%;
-
-    --popover: 222 40% 10%;
-    --popover-foreground: 210 40% 96%;
-
-    --primary: 258 75% 58%;
+    /* PrimeX Estates Design System */
+    --primary: 216 48% 23%;
     --primary-foreground: 210 40% 98%;
 
-    --secondary: 210 100% 55%;
+    --secondary: 172 77% 25%;
     --secondary-foreground: 210 40% 98%;
 
-    --muted: 222 30% 16%;
-    --muted-foreground: 215 20% 55%;
+    --accent: 45 59% 52%;
+    --accent-foreground: 216 48% 23%;
 
-    --accent: 258 60% 48%;
-    --accent-foreground: 210 40% 98%;
+    --background: 210 20% 98%;
+    --foreground: 215 25% 27%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 215 25% 27%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 215 25% 27%;
+
+    --muted: 210 20% 96%;
+    --muted-foreground: 215 16% 47%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 222 30% 18%;
-    --input: 222 30% 18%;
-    --ring: 258 75% 58%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 216 48% 23%;
 
     --radius: 0.75rem;
 
-    --gradient-purple-blue: linear-gradient(135deg, hsl(258 75% 58%) 0%, hsl(210 100% 55%) 100%);
-    --gradient-blue-purple: linear-gradient(135deg, hsl(210 100% 55%) 0%, hsl(258 75% 58%) 100%);
-    --shadow-glow: 0 0 30px hsla(258 75% 58% / 0.15);
-    --shadow-card: 0 8px 32px hsla(0 0% 0% / 0.3);
+    /* Custom PrimeX Tokens */
+    --gradient-primary: linear-gradient(135deg, hsl(216 48% 23%) 0%, hsl(172 77% 25%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(45 59% 52%) 0%, hsl(45 70% 58%) 100%);
+    --shadow-elegant: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --shadow-card: 0 5px 20px rgba(0, 0, 0, 0.08);
+    --transition: all 0.3s ease;
+
+    /* Badge Colors */
+    --residential: 160 84% 39%;
+    --commercial: 190 84% 37%;
+    --luxury: 38 92% 50%;
+    --construction: 262 83% 58%;
   }
 }
 
@@ -53,25 +62,172 @@
   }
 
   body {
-    @apply bg-background text-foreground antialiased;
-    font-family: 'Plus Jakarta Sans', sans-serif;
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: 'Inter', sans-serif;
   }
 }
 
 @layer components {
-  .gradient-purple-blue {
-    background: var(--gradient-purple-blue);
+  .gradient-primary {
+    background: var(--gradient-primary);
   }
 
-  .gradient-blue-purple {
-    background: var(--gradient-blue-purple);
+  .gradient-accent {
+    background: var(--gradient-accent);
   }
 
-  .shadow-glow {
-    box-shadow: var(--shadow-glow);
+  .shadow-elegant {
+    box-shadow: var(--shadow-elegant);
   }
 
-  .shadow-card-dark {
+  .shadow-card {
     box-shadow: var(--shadow-card);
+  }
+
+  .btn-primary {
+    @apply bg-primary text-primary-foreground px-7 py-3.5 rounded-lg font-semibold inline-flex items-center gap-2.5 transition-all duration-300;
+  }
+
+  .btn-primary:hover {
+    @apply bg-secondary -translate-y-0.5;
+    box-shadow: var(--shadow-elegant);
+  }
+
+  .btn-secondary {
+    @apply bg-secondary text-white px-7 py-3.5 rounded-lg font-semibold inline-flex items-center gap-2.5 transition-all duration-300;
+  }
+
+  .btn-secondary:hover {
+    @apply bg-primary -translate-y-0.5;
+    box-shadow: var(--shadow-elegant);
+  }
+
+  .btn-outline {
+    @apply bg-transparent border-2 border-primary text-primary px-7 py-3.5 rounded-lg font-semibold inline-flex items-center gap-2.5 transition-all duration-300;
+  }
+
+  .btn-outline:hover {
+    @apply bg-primary text-white -translate-y-0.5;
+    box-shadow: var(--shadow-elegant);
+  }
+
+  .btn-accent {
+    @apply bg-accent text-primary px-7 py-3.5 rounded-lg font-semibold inline-flex items-center gap-2.5 transition-all duration-300;
+  }
+
+  .btn-accent:hover {
+    @apply -translate-y-0.5;
+    background: hsl(45 70% 58%);
+    box-shadow: var(--shadow-elegant);
+  }
+
+  .section-title {
+    @apply text-center mb-14;
+  }
+
+  .section-title h2 {
+    @apply text-4xl font-extrabold text-primary mb-4 relative inline-block;
+  }
+
+  .section-title h2::after {
+    content: '';
+    @apply absolute w-20 h-1 bg-accent -bottom-4 left-1/2 -translate-x-1/2 rounded;
+  }
+
+  .section-title p {
+    @apply text-muted-foreground max-w-2xl mx-auto text-lg mt-6;
+  }
+
+  /* Project Card Styles */
+  .project-card {
+    @apply bg-card rounded-2xl overflow-hidden border border-border transition-all duration-300;
+    box-shadow: var(--shadow-card);
+  }
+
+  .project-card:hover {
+    @apply -translate-y-2;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
+  }
+
+  .project-badge {
+    @apply inline-block text-white px-3.5 py-1.5 rounded-full text-xs font-bold mb-3 uppercase tracking-wide;
+  }
+
+  .residential-badge {
+    background: linear-gradient(135deg, hsl(160 84% 39%) 0%, hsl(158 64% 32%) 100%);
+  }
+
+  .commercial-badge {
+    background: linear-gradient(135deg, hsl(190 84% 37%) 0%, hsl(188 77% 31%) 100%);
+  }
+
+  .luxury-badge {
+    background: linear-gradient(135deg, hsl(38 92% 50%) 0%, hsl(32 95% 44%) 100%);
+  }
+
+  .construction-badge {
+    background: linear-gradient(135deg, hsl(262 83% 58%) 0%, hsl(263 70% 50%) 100%);
+  }
+
+  /* Feature Styles */
+  .feature {
+    @apply flex flex-col items-center text-center;
+  }
+
+  .feature-value {
+    @apply font-bold text-primary text-lg mb-1;
+  }
+
+  .feature-label {
+    @apply text-xs text-muted-foreground uppercase tracking-wide;
+  }
+
+  /* Filter Button */
+  .filter-btn {
+    @apply px-7 py-3 bg-card border-2 border-border rounded-full cursor-pointer transition-all duration-300 font-semibold text-muted-foreground;
+  }
+
+  .filter-btn:hover {
+    @apply border-primary text-primary -translate-y-0.5;
+  }
+
+  .filter-btn.active {
+    @apply bg-primary text-white border-primary;
+  }
+
+  /* Metric Card */
+  .metric-card {
+    @apply bg-card rounded-xl p-6 flex items-center gap-5 transition-all duration-300 border-l-4 border-l-secondary;
+    box-shadow: var(--shadow-card);
+  }
+
+  .metric-card:hover {
+    @apply -translate-y-1;
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+  }
+
+  .metric-icon {
+    @apply w-14 h-14 rounded-xl flex items-center justify-center text-white text-xl;
+    background: var(--gradient-primary);
+  }
+
+  .metric-value {
+    @apply text-3xl font-extrabold text-primary leading-none mb-1;
+  }
+
+  .metric-label {
+    @apply text-muted-foreground text-sm mb-2;
+  }
+
+  .metric-change {
+    @apply text-sm font-semibold px-2 py-1 rounded-full;
+  }
+
+  .metric-change.positive {
+    @apply bg-green-100 text-green-600;
+  }
+
+  .metric-change.negative {
+    @apply bg-red-100 text-red-600;
   }
 }
