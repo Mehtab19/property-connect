@@ -21,8 +21,8 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
         <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/prime-x" element={<PrimeXHome />} />
+          <Route path="/" element={<PrimeXHome />} />
+          <Route path="/home" element={<Index />} />
           <Route path="/smart-chat" element={<SmartChat />} />
           <Route path="/virtual-advisor" element={<VirtualAdvisor />} />
           <Route path="*" element={<NotFound />} />
