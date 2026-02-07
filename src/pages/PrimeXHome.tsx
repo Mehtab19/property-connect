@@ -48,7 +48,7 @@ const PrimeXHome = () => {
             </div>
             <div className="relative p-6 md:p-8 -mt-16">
               <h3 className="text-xl md:text-2xl font-bold text-foreground mb-3">
-                Prime X Virtual Property Advisor
+Prime X Virtual Property Investment Advisor
               </h3>
               <p className="text-muted-foreground text-sm md:text-base mb-6 leading-relaxed">
                 Talk to an AI-powered property expert that guides you through buying, renting, or investing in real estate. Get personalized recommendations just like speaking with a professional agent.
