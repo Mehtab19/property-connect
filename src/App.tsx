@@ -63,6 +63,7 @@ const App = () => (
             <Route path="/mortgage" element={<MortgageHub />} />
             <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/properties" element={<Properties />} />
+            <Route path="/state/:stateName" element={<StatePage />} />
             <Route path="/chat" element={<Chat />} />
             <Route path="/handoff" element={<Handoff />} />
             <Route
