@@ -42,6 +42,7 @@ import AgentManagement from "./pages/admin/AgentManagement";
 import PartnerManagement from "./pages/admin/PartnerManagement";
 import AuditLog from "./pages/admin/AuditLog";
 import Admin from "./pages/Admin";
+import StatePage from "./pages/StatePage";
 
 const queryClient = new QueryClient();
 
