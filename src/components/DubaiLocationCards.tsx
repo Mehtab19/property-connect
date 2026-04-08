@@ -1,149 +1,98 @@
 /**
- * Dubai Location Cards Component
- * Interactive location discovery cards with hover effects
+ * UAE State Strip Cards Component
+ * Vertical strip cards for UAE states with hover effects
  */
 
 import { useNavigate } from 'react-router-dom';
-import { MapPin, ArrowRight } from 'lucide-react';
 
-interface LocationCard {
+interface StateCard {
   name: string;
-  tagline: string;
+  slug: string;
   image: string;
-  areaSlug: string;
 }
 
-const dubaiLocations: LocationCard[] = [
+const uaeStates: StateCard[] = [
   {
-    name: 'Downtown Dubai',
-    tagline: 'Iconic living near Burj Khalifa & Dubai Mall',
+    name: 'Dubai',
+    slug: 'dubai',
     image: 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=800&q=80',
-    areaSlug: 'Downtown Dubai',
   },
   {
-    name: 'Dubai Marina',
-    tagline: 'Waterfront luxury with stunning skyline views',
-    image: 'https://images.unsplash.com/photo-1518684079-3c830dcef090?auto=format&fit=crop&w=800&q=80',
-    areaSlug: 'Dubai Marina',
+    name: 'Abu Dhabi',
+    slug: 'abu-dhabi',
+    image: 'https://images.unsplash.com/photo-1611605645802-c21be743c321?auto=format&fit=crop&w=800&q=80',
   },
   {
-    name: 'Palm Jumeirah',
-    tagline: 'Exclusive island living on the eighth wonder',
-    image: 'https://images.unsplash.com/photo-1582672060674-bc2bd808a8b5?auto=format&fit=crop&w=800&q=80',
-    areaSlug: 'Palm Jumeirah',
+    name: 'Sharjah',
+    slug: 'sharjah',
+    image: 'https://images.unsplash.com/photo-1578895101408-1a36b834405b?auto=format&fit=crop&w=800&q=80',
   },
   {
-    name: 'Business Bay',
-    tagline: 'Modern urban living in Dubai\'s business hub',
-    image: 'https://images.unsplash.com/photo-1546412414-e1885259563a?auto=format&fit=crop&w=800&q=80',
-    areaSlug: 'Business Bay',
-  },
-  {
-    name: 'Jumeirah Village Circle',
-    tagline: 'Family-friendly community with vibrant lifestyle',
+    name: 'Ajman',
+    slug: 'ajman',
     image: 'https://images.unsplash.com/photo-1580674684081-7617fbf3d745?auto=format&fit=crop&w=800&q=80',
-    areaSlug: 'JVC',
   },
   {
-    name: 'Dubai Hills Estate',
-    tagline: 'Premium golf course living in a green oasis',
-    image: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=800&q=80',
-    areaSlug: 'Dubai Hills',
+    name: 'Ras Al Khaimah',
+    slug: 'ras-al-khaimah',
+    image: 'https://images.unsplash.com/photo-1466442929976-97f336a657be?auto=format&fit=crop&w=800&q=80',
   },
   {
-    name: 'Arabian Ranches',
-    tagline: 'Serene villa community with desert charm',
-    image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80',
-    areaSlug: 'Arabian Ranches',
+    name: 'Fujairah',
+    slug: 'fujairah',
+    image: 'https://images.unsplash.com/photo-1482938289607-e9573fc25ebb?auto=format&fit=crop&w=800&q=80',
   },
   {
-    name: 'Jumeirah Beach Residence',
-    tagline: 'Beachfront living with The Walk at your doorstep',
+    name: 'Umm Al Quwain',
+    slug: 'umm-al-quwain',
     image: 'https://images.unsplash.com/photo-1559599746-8823b38544c6?auto=format&fit=crop&w=800&q=80',
-    areaSlug: 'JBR',
   },
 ];
 
 const DubaiLocationCards = () => {
   const navigate = useNavigate();
-  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  const handleLocationClick = (areaSlug: string) => {
-    navigate(`/properties?location=${encodeURIComponent(areaSlug)}`);
-  };
 
   return (
     <section className="py-20 bg-background">
       <div className="container mx-auto px-4">
-        {/* Section Header */}
         <div className="section-title">
-          <h2>Explore Dubai's Premier Locations</h2>
-          <p>Discover exclusive properties in Dubai's most sought-after neighborhoods</p>
+          <h2>Explore the UAE</h2>
+          <p>Discover premium properties across all seven emirates</p>
         </div>
 
-        {/* Location Cards Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {dubaiLocations.map((location, index) => (
+        {/* Strip Cards Container */}
+        <div className="flex gap-3 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide">
+          {uaeStates.map((state) => (
             <button
-              key={location.areaSlug}
-              onClick={() => handleLocationClick(location.areaSlug)}
-              className="group relative overflow-hidden rounded-2xl aspect-[3/4] focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
-              style={{ animationDelay: `${index * 0.1}s` }}
-              aria-label={`View properties in ${location.name}`}
+              key={state.slug}
+              onClick={() => navigate(`/properties?location=${encodeURIComponent(state.name)}`)}
+              className="group relative flex-shrink-0 w-[200px] sm:w-[220px] lg:w-0 lg:flex-1 h-[500px] rounded-2xl overflow-hidden focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 snap-start transition-all duration-500"
+              aria-label={`View properties in ${state.name}`}
             >
-              {/* Background Image with Lazy Loading */}
-              <div 
-                className={`absolute inset-0 bg-cover bg-center transition-transform duration-500 ${
-                  prefersReducedMotion ? '' : 'group-hover:scale-110'
-                }`}
-                style={{ backgroundImage: `url(${location.image})` }}
+              {/* Background Image */}
+              <div
+                className="absolute inset-0 bg-cover bg-center transition-all duration-700 group-hover:scale-110 group-hover:brightness-110"
+                style={{ backgroundImage: `url(${state.image})` }}
               />
-              
+
               {/* Gradient Overlay */}
-              <div className={`absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/40 to-transparent transition-opacity duration-300 ${
-                prefersReducedMotion ? '' : 'opacity-70 group-hover:opacity-90'
-              }`} />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent transition-opacity duration-500 group-hover:from-black/80" />
 
-              {/* Content */}
-              <div className="absolute inset-0 flex flex-col justify-end p-6 text-white">
-                {/* Location Icon */}
-                <div className={`inline-flex items-center gap-2 mb-2 transition-transform duration-300 ${
-                  prefersReducedMotion ? '' : 'transform group-hover:-translate-y-2'
-                }`}>
-                  <MapPin className="w-4 h-4 text-accent" />
-                  <span className="text-sm font-medium text-accent">Dubai, UAE</span>
-                </div>
-
-                {/* Title */}
-                <h3 className={`text-xl font-bold mb-2 transition-transform duration-300 ${
-                  prefersReducedMotion ? '' : 'transform group-hover:-translate-y-2'
-                }`}>
-                  {location.name}
+              {/* State Name */}
+              <div className="absolute bottom-0 left-0 right-0 p-6">
+                <h3 className="text-2xl font-bold text-white tracking-wide transition-transform duration-500 group-hover:-translate-y-2">
+                  {state.name}
                 </h3>
-
-                {/* Tagline - Shows on hover */}
-                <p className={`text-sm text-white/80 transition-all duration-300 ${
-                  prefersReducedMotion 
-                    ? 'opacity-100' 
-                    : 'opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0'
-                }`}>
-                  {location.tagline}
-                </p>
-
-                {/* CTA Arrow - Shows on hover */}
-                <div className={`flex items-center gap-2 mt-3 text-accent font-semibold text-sm transition-all duration-300 ${
-                  prefersReducedMotion 
-                    ? 'opacity-100' 
-                    : 'opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0'
-                }`}>
-                  <span>View Properties</span>
-                  <ArrowRight className="w-4 h-4" />
-                </div>
               </div>
             </button>
           ))}
         </div>
       </div>
+
+      <style>{`
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+      `}</style>
     </section>
   );
 };
