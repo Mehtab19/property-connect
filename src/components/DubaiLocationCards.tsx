@@ -69,37 +69,50 @@ const DubaiLocationCards = () => {
             Discover premium properties across all seven emirates
           </p>
         </div>
+      </div>
 
-        {/* Strip Cards Container */}
-        <div className="flex gap-4 overflow-x-auto pb-6 snap-x snap-mandatory" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-          {uaeStates.map((state) => (
-            <button
-              key={state.slug}
-              onClick={() => navigate(`/state/${state.slug}`)}
-              className="group relative flex-shrink-0 w-[240px] h-[440px] rounded-2xl overflow-hidden focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 snap-start transition-all duration-500 hover:shadow-2xl"
-              aria-label={`View properties in ${state.name}`}
-            >
-              {/* Background Image */}
-              <div
-                className="absolute inset-0 bg-cover bg-center transition-all duration-700 group-hover:scale-110 group-hover:brightness-110"
-                style={{ backgroundImage: `url(${state.image})` }}
-              />
+      {/* Strip Cards Container — full-bleed horizontal scroll */}
+      <div
+        className="flex gap-5 px-6 pb-6 snap-x snap-mandatory overflow-x-auto"
+        style={{
+          scrollbarWidth: 'none',
+          msOverflowStyle: 'none',
+          WebkitOverflowScrolling: 'touch',
+        }}
+      >
+        {uaeStates.map((state) => (
+          <button
+            key={state.slug}
+            onClick={() => navigate(`/state/${state.slug}`)}
+            className="group relative snap-start rounded-2xl overflow-hidden focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-all duration-500 hover:shadow-2xl"
+            style={{
+              minWidth: 240,
+              width: 240,
+              height: 420,
+              flexShrink: 0,
+            }}
+            aria-label={`View properties in ${state.name}`}
+          >
+            {/* Background Image */}
+            <div
+              className="absolute inset-0 bg-cover bg-center transition-all duration-700 group-hover:scale-110 group-hover:brightness-110"
+              style={{ backgroundImage: `url(${state.image})` }}
+            />
 
-              {/* Gradient Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent transition-opacity duration-500" />
+            {/* Gradient Overlay */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent transition-opacity duration-500" />
 
-              {/* State Info */}
-              <div className="absolute bottom-0 left-0 right-0 p-6 transition-transform duration-500 group-hover:-translate-y-2">
-                <h3 className="text-2xl font-bold text-white tracking-wide mb-1">
-                  {state.name}
-                </h3>
-                <p className="text-white/70 text-sm">
-                  {state.propertyCount} Properties
-                </p>
-              </div>
-            </button>
-          ))}
-        </div>
+            {/* State Info */}
+            <div className="absolute bottom-0 left-0 right-0 p-6 transition-transform duration-500 group-hover:-translate-y-2">
+              <h3 className="text-2xl font-bold text-white tracking-wide mb-1">
+                {state.name}
+              </h3>
+              <p className="text-white/70 text-sm">
+                {state.propertyCount} Properties
+              </p>
+            </div>
+          </button>
+        ))}
       </div>
 
       <style>{`
