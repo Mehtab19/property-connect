@@ -4,6 +4,7 @@
  */
 
 import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
 
 interface StateCard {
   name: string;
@@ -59,10 +60,11 @@ const uaeStates: StateCard[] = [
 
 const DubaiLocationCards = () => {
   const navigate = useNavigate();
+  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
 
   return (
-    <section className="py-20 bg-background">
-      <div className="container mx-auto px-4">
+    <section className="py-20 bg-background overflow-hidden">
+      <div className="container mx-auto px-4 mb-10">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold text-primary mb-4">Explore the UAE</h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
@@ -71,28 +73,34 @@ const DubaiLocationCards = () => {
         </div>
       </div>
 
-      {/* Cards Grid */}
-      <div className="container mx-auto px-4 pb-6">
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-5">
-        {uaeStates.map((state) => (
+      {/* Edge-to-edge panoramic strip */}
+      <div className="flex w-full h-[500px] overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+        {uaeStates.map((state, idx) => (
           <button
             key={state.slug}
             onClick={() => navigate(`/state/${state.slug}`)}
-            className="group relative rounded-2xl overflow-hidden focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-all duration-500 hover:shadow-2xl hover:scale-[1.03] h-[420px]"
+            onMouseEnter={() => setHoveredIdx(idx)}
+            onMouseLeave={() => setHoveredIdx(null)}
+            className="relative overflow-hidden focus:outline-none"
+            style={{
+              flex: hoveredIdx === idx ? 1.6 : hoveredIdx !== null ? 0.85 : 1,
+              transition: 'flex 0.5s cubic-bezier(0.4,0,0.2,1)',
+              minWidth: 0,
+            }}
             aria-label={`View properties in ${state.name}`}
           >
             {/* Background Image */}
             <div
-              className="absolute inset-0 bg-cover bg-center transition-all duration-700 group-hover:scale-110 group-hover:brightness-110"
+              className="absolute inset-0 bg-cover bg-center transition-transform duration-700"
               style={{ backgroundImage: `url(${state.image})` }}
             />
 
             {/* Gradient Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent transition-opacity duration-500" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
 
             {/* State Info */}
-            <div className="absolute bottom-0 left-0 right-0 p-6 transition-transform duration-500 group-hover:-translate-y-2">
-              <h3 className="text-2xl font-bold text-white tracking-wide mb-1">
+            <div className="absolute bottom-0 left-0 right-0 p-6">
+              <h3 className="text-xl md:text-2xl font-bold text-white tracking-wide mb-1">
                 {state.name}
               </h3>
               <p className="text-white/70 text-sm">
@@ -102,7 +110,10 @@ const DubaiLocationCards = () => {
           </button>
         ))}
       </div>
-      </div>
+
+      <style>{`
+        .flex::-webkit-scrollbar { display: none; }
+      `}</style>
     </section>
   );
 };
