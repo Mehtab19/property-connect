@@ -71,26 +71,14 @@ const DubaiLocationCards = () => {
         </div>
       </div>
 
-      {/* Strip Cards Container — full-bleed horizontal scroll */}
-      <div
-        className="flex gap-5 px-6 pb-6 snap-x snap-mandatory overflow-x-auto"
-        style={{
-          scrollbarWidth: 'none',
-          msOverflowStyle: 'none',
-          WebkitOverflowScrolling: 'touch',
-        }}
-      >
+      {/* Cards Grid */}
+      <div className="container mx-auto px-4 pb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-5">
         {uaeStates.map((state) => (
           <button
             key={state.slug}
             onClick={() => navigate(`/state/${state.slug}`)}
-            className="group relative snap-start rounded-2xl overflow-hidden focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-all duration-500 hover:shadow-2xl"
-            style={{
-              minWidth: 240,
-              width: 240,
-              height: 420,
-              flexShrink: 0,
-            }}
+            className="group relative rounded-2xl overflow-hidden focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-all duration-500 hover:shadow-2xl hover:scale-[1.03] h-[420px]"
             aria-label={`View properties in ${state.name}`}
           >
             {/* Background Image */}
@@ -114,10 +102,7 @@ const DubaiLocationCards = () => {
           </button>
         ))}
       </div>
-
-      <style>{`
-        .flex::-webkit-scrollbar { display: none; }
-      `}</style>
+      </div>
     </section>
   );
 };
